@@ -12,6 +12,7 @@ public class Player {
 	Board knownBoard; 
 	Hand hand1; 
 	Hand hand2;
+	Hand knownby2;
 	// Delete this once you actually write your own version of the class.
 	private static Scanner scn = new Scanner(System.in);
 	
@@ -22,6 +23,15 @@ public class Player {
 		knownBoard = new Board(); // Initial State of the Board for the game 
 		hand1 = new Hand(); //Initial Known Hand for Player 1 (current player)
 		hand2 = new Hand(); //Initial Known Hand for Player 2
+		knownby2 = new Hand(); //What Player 1 knows Player 2 knows about their hand
+		try { //Initializes what the other player knows as a list of null values
+			for (int i = 0; i < 5; i++) {
+				knownby2.add(i, null);
+			}
+		}
+		catch(Exception e){
+			System.out.println(e);
+		}
 	}
 	
 	/**
@@ -37,11 +47,20 @@ public class Player {
 	public void tellPartnerDiscard(Hand startHand, Card discard, int disIndex, Card draw, int drawIndex, 
 			Hand finalHand, Board boardState) {
 		try{
-			
+			//Removes the card that the player discarded from his own knowledge base (whatever he knew about it)
+			knownby2.remove(disIndex);
+			//if he draws a card and the deck isn't empty - otherwise does nothing
+			if(draw != null){
+				//adds a null card in the space where he added it in his hand, offsetting any other cards he may know at that index
+				knownby2.add(drawIndex, null);
+			}
 		}
 		catch (Exception e){
 			System.out.println(e);
 		}
+		// what player 1 knows player 2's hand is 
+		hand2 = finalHand;
+		// what player 1 knows about the board 
 		knownBoard = boardState;
 	}
 	
