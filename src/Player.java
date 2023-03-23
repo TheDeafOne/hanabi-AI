@@ -3,7 +3,7 @@ import java.util.Scanner;
 
 /**
  * This is the only class you should edit.
- * @author You
+ * @author AlthoffLJ, WoodburnKB, BennettKE
  *
  */
 public class Player {
@@ -52,7 +52,7 @@ public class Player {
 	 * @param draw The card she drew to replace it; null, if the deck was empty.
 	 * @param drawIndex The index to which she drew the new card.
 	 * @param finalHand The hand your partner ended with after playing.
-	 * @param wasLegalPLay Whether the play was legal or not.
+	 * @param wasLegalPlay Whether the play was legal or not.
 	 * @param boardState The state of the board after play.
 	 */
 	public void tellPartnerPlay(Hand startHand, Card play, int playIndex, Card draw, int drawIndex,
