@@ -36,7 +36,13 @@ public class Player {
 	 */
 	public void tellPartnerDiscard(Hand startHand, Card discard, int disIndex, Card draw, int drawIndex, 
 			Hand finalHand, Board boardState) {
-		
+		try{
+			
+		}
+		catch (Exception e){
+			System.out.println(e);
+		}
+		knownBoard = boardState;
 	}
 	
 	/**
@@ -45,11 +51,16 @@ public class Player {
 	 * @param boardState The state of the board after play.
 	 */
 	public void tellYourDiscard(Card discard, Board boardState) {
-		for (int i = 0; i < hand1.size(); i++){
-			if(hand1.get(i) == discard){
-				hand1.remove(i);
-				break;
+		try{
+			for (int i = 0; i < hand1.size(); i++){
+				if(hand1.get(i) == discard){
+					hand1.remove(i);
+					break;
+				}
 			}
+		}
+		catch(Exception e){
+			System.out.println(e);
 		}
 		knownBoard = boardState;
 	}
@@ -68,6 +79,10 @@ public class Player {
 	public void tellPartnerPlay(Hand startHand, Card play, int playIndex, Card draw, int drawIndex,
 			Hand finalHand, boolean wasLegalPlay, Board boardState) {
 		
+		
+		
+		
+		knownBoard = boardState;
 	}
 	
 	/**
@@ -77,9 +92,7 @@ public class Player {
 	 * @param boardState The state of the board after play.
 	 */
 	public void tellYourPlay(Card play, boolean wasLegalPlay, Board boardState) {
-		if(wasLegalPlay == true){
-			
-		}
+		
 	}
 	
 	/**
@@ -101,7 +114,17 @@ public class Player {
 	 * @param boardState The state of the board after the hint.
 	 */
 	public void tellNumberHint(int number, ArrayList<Integer> indices, Hand partnerHand, Board boardState) {
-		
+		try {
+			for (int i = 0; i < indices.size(); i++) {
+				int color1 = hand1.get(indices.get(i)).color;
+				Card c1 = new Card(color1, number);
+				hand1.remove(indices.get(i));
+				hand1.add(indices.get(i),c1);
+			}
+		}
+		catch(Exception e){ System.out.println(e);}
+		hand2 = partnerHand;
+		knownBoard = boardState;
 	}
 	
 	/**
