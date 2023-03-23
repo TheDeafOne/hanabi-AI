@@ -17,7 +17,9 @@ public class Player {
 	 * This default constructor should be the only constructor you supply.
 	 */
 	public Player() {
-		
+		Board knownBoard; // Initial State of the Board for the game 
+		Hand h1; //Initial Known Hand for Player 1 
+		Hand h2; //Initial Known Hand for Player 2
 	}
 	
 	/**
@@ -67,7 +69,9 @@ public class Player {
 	 * @param boardState The state of the board after play.
 	 */
 	public void tellYourPlay(Card play, boolean wasLegalPlay, Board boardState) {
-		
+		if(wasLegalPlay == true){
+			
+		}
 	}
 	
 	/**
@@ -113,9 +117,8 @@ public class Player {
 	 *     his cards have that color, or if no hints remain. This command consumes a hint.
 	 */
 	public String ask(int yourHandSize, Hand partnerHand, Board boardState) {
-		// Provided for testing purposes only; delete.
 		// Your method should construct and return a String without user input.
-		return scn.nextLine();
+		
 	}
 
 }
