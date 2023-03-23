@@ -71,6 +71,7 @@ public class Player {
 	 */
 	public void tellYourDiscard(Card discard, Board boardState) {
 		try{
+			//Finds where the discarded card was at in your hand and then removes that index from your known hand
 			for (int i = 0; i < hand1.size(); i++){
 				if(hand1.get(i) == discard){
 					hand1.remove(i);
@@ -95,12 +96,24 @@ public class Player {
 	 * @param wasLegalPlay Whether the play was legal or not.
 	 * @param boardState The state of the board after play.
 	 */
+	//Currently basically the same as tellPartnerDiscard method ... Not sure if that should be how it is or not...
 	public void tellPartnerPlay(Hand startHand, Card play, int playIndex, Card draw, int drawIndex,
 			Hand finalHand, boolean wasLegalPlay, Board boardState) {
-		
-		
-		
-		
+		try{
+			//Removes the card that the player discarded from his own knowledge base (whatever he knew about it)
+			knownby2.remove(playIndex);
+			//if he draws a card and the deck isn't empty - otherwise does nothing
+			if(draw != null){
+				//adds a null card in the space where he added it in his hand, offsetting any other cards he may know at that index
+				knownby2.add(drawIndex, null);
+			}
+		}
+		catch (Exception e){
+			System.out.println(e);
+		}
+		// what player 1 knows player 2's hand is 
+		hand2 = finalHand;
+		// what player 1 knows about the board 
 		knownBoard = boardState;
 	}
 	
