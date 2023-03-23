@@ -9,7 +9,9 @@ import java.util.Scanner;
 public class Player {
 	// Add whatever variables you want. You MAY NOT use static variables, or otherwise allow direct communication between
 	// different instances of this class by any means; doing so will result in a score of 0.
-	
+	Board knownBoard; 
+	Hand hand1; 
+	Hand hand2;
 	// Delete this once you actually write your own version of the class.
 	private static Scanner scn = new Scanner(System.in);
 	
@@ -17,9 +19,9 @@ public class Player {
 	 * This default constructor should be the only constructor you supply.
 	 */
 	public Player() {
-		Board knownBoard; // Initial State of the Board for the game 
-		Hand h1; //Initial Known Hand for Player 1 
-		Hand h2; //Initial Known Hand for Player 2
+		knownBoard = new Board(); // Initial State of the Board for the game 
+		hand1 = new Hand(); //Initial Known Hand for Player 1 (current player)
+		hand2 = new Hand(); //Initial Known Hand for Player 2
 	}
 	
 	/**
@@ -43,7 +45,13 @@ public class Player {
 	 * @param boardState The state of the board after play.
 	 */
 	public void tellYourDiscard(Card discard, Board boardState) {
-		
+		for (int i = 0; i < hand1.size(); i++){
+			if(hand1.get(i) == discard){
+				hand1.remove(i);
+				break;
+			}
+		}
+		knownBoard = boardState;
 	}
 	
 	/**
