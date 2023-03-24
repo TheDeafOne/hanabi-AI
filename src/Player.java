@@ -23,6 +23,14 @@ public class Player {
 	String discardHint;
 	// possible optimization: storing what possible cards could be in our hand (not in board, table, or other's hand)
 
+	//TODO:
+	// 1) implement ranking system
+	// 2) implement logic for determining whether we have playable and discardable cards
+	// 		(update after each move and after hints received)
+	// 3) implement logic for determining discardable and playable hints (** use Board.isLegalPlay)
+	// 		a) logic for whether a card is discardable (see method stub)
+	// 		b) String hint constructor
+
 	// Delete this once you actually write your own version of the class.
 	private static Scanner scn = new Scanner(System.in);
 	
