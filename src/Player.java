@@ -101,11 +101,11 @@ public class Player {
 			//if he draws a card and the deck isn't empty - otherwise does nothing
 			if(draw != null){
 				//adds a null card in the space where he added it in his hand, offsetting any other cards he may know at that index
-				partnerHandKB.add(drawIndex, null);
+				partnerHandKB.add(drawIndex, draw);
 			}
 		}
 		catch (Exception e){
-			System.out.println(e);
+			e.printStackTrace();
 		}
 		// what player 1 knows player 2's hand is 
 		partnerHand = finalHand;
@@ -120,7 +120,7 @@ public class Player {
 	 * @param boardState The state of the board after play.
 	 */
 	public void tellYourPlay(Card play, boolean wasLegalPlay, Board boardState) {
-		
+
 	}
 	
 	/**
@@ -131,7 +131,18 @@ public class Player {
 	 * @param boardState The state of the board after the hint.
 	 */
 	public void tellColorHint(int color, ArrayList<Integer> indices, Hand partnerHand, Board boardState) {
-		
+		try {
+			for (Integer index : indices) {
+				Card oldCard = playerHand.get(index);
+				Card newCard = oldCard != null ? new Card(oldCard.color, color) : new Card(color, -1);
+				playerHand.remove(index);
+				playerHand.add(index, newCard);
+			}
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		knownBoard = boardState;
 	}
 	
 	/**
@@ -145,7 +156,7 @@ public class Player {
 		try {
 			for (Integer index : indices) {
 				Card oldCard = playerHand.get(index);
-				Card newCard = oldCard != null ? new Card(oldCard.color, number) : new Card(-1, number);
+				Card newCard = oldCard != null ? new Card(oldCard.value, number) : new Card(-1, number);
 				playerHand.remove(index);
 				playerHand.add(index, newCard);
 			}
