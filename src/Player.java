@@ -9,10 +9,11 @@ import java.util.Scanner;
 public class Player {
 	// Add whatever variables you want. You MAY NOT use static variables, or otherwise allow direct communication between
 	// different instances of this class by any means; doing so will result in a score of 0.
-	Board knownBoard; 
-	Hand hand1; 
-	Hand hand2;
-	Hand knownby2;
+	Board knownBoard;
+	Hand playerHand; // what you know about your hand (you only know some things)
+	Hand partnerHand; // what you know about your partners hand (you know everything)
+	Hand partnerHandKB; // what your partner knows about their hand (they only know some things)
+
 	// Delete this once you actually write your own version of the class.
 	private static Scanner scn = new Scanner(System.in);
 	
@@ -20,13 +21,12 @@ public class Player {
 	 * This default constructor should be the only constructor you supply.
 	 */
 	public Player() {
-		knownBoard = new Board(); // Initial State of the Board for the game 
-		hand1 = new Hand(); //Initial Known Hand for Player 1 (current player)
-		hand2 = new Hand(); //Initial Known Hand for Player 2
-		knownby2 = new Hand(); //What Player 1 knows Player 2 knows about their hand
+		playerHand = new Hand(); //Initial Known Hand for Player 1 (current player)
+		partnerHand = new Hand(); //Initial Known Hand for Player 2
+		partnerHandKB = new Hand(); //What Player 1 knows Player 2 knows about their hand
 		try { //Initializes what the other player knows as a list of null values
 			for (int i = 0; i < 5; i++) {
-				knownby2.add(i, null);
+				partnerHandKB.add(i, null);
 			}
 		}
 		catch(Exception e){
@@ -44,22 +44,20 @@ public class Player {
 	 * @param finalHand The hand your partner ended with after redrawing.
 	 * @param boardState The state of the board after play.
 	 */
-	public void tellPartnerDiscard(Hand startHand, Card discard, int disIndex, Card draw, int drawIndex, 
-			Hand finalHand, Board boardState) {
+	public void tellPartnerDiscard(Hand startHand, Card discard, int disIndex, Card draw, int drawIndex, Hand finalHand, Board boardState) {
 		try{
 			//Removes the card that the player discarded from his own knowledge base (whatever he knew about it)
-			knownby2.remove(disIndex);
+			partnerHandKB.remove(disIndex);
 			//if he draws a card and the deck isn't empty - otherwise does nothing
 			if(draw != null){
 				//adds a null card in the space where he added it in his hand, offsetting any other cards he may know at that index
-				knownby2.add(drawIndex, null);
+				partnerHandKB.add(drawIndex, null);
 			}
-		}
-		catch (Exception e){
+		}  catch (Exception e){
 			System.out.println(e);
 		}
 		// what player 1 knows player 2's hand is 
-		hand2 = finalHand;
+		partnerHand = finalHand;
 		// what player 1 knows about the board 
 		knownBoard = boardState;
 	}
@@ -72,9 +70,9 @@ public class Player {
 	public void tellYourDiscard(Card discard, Board boardState) {
 		try{
 			//Finds where the discarded card was at in your hand and then removes that index from your known hand
-			for (int i = 0; i < hand1.size(); i++){
-				if(hand1.get(i) == discard){
-					hand1.remove(i);
+			for (int i = 0; i < playerHand.size(); i++){
+				if(playerHand.get(i) == discard){
+					playerHand.remove(i);
 					break;
 				}
 			}
@@ -96,23 +94,21 @@ public class Player {
 	 * @param wasLegalPlay Whether the play was legal or not.
 	 * @param boardState The state of the board after play.
 	 */
-	//Currently basically the same as tellPartnerDiscard method ... Not sure if that should be how it is or not...
-	public void tellPartnerPlay(Hand startHand, Card play, int playIndex, Card draw, int drawIndex,
-			Hand finalHand, boolean wasLegalPlay, Board boardState) {
+	public void tellPartnerPlay(Hand startHand, Card play, int playIndex, Card draw, int drawIndex, Hand finalHand, boolean wasLegalPlay, Board boardState) {
 		try{
 			//Removes the card that the player discarded from his own knowledge base (whatever he knew about it)
-			knownby2.remove(playIndex);
+			partnerHandKB.remove(playIndex);
 			//if he draws a card and the deck isn't empty - otherwise does nothing
 			if(draw != null){
 				//adds a null card in the space where he added it in his hand, offsetting any other cards he may know at that index
-				knownby2.add(drawIndex, null);
+				partnerHandKB.add(drawIndex, null);
 			}
 		}
 		catch (Exception e){
 			System.out.println(e);
 		}
 		// what player 1 knows player 2's hand is 
-		hand2 = finalHand;
+		partnerHand = finalHand;
 		// what player 1 knows about the board 
 		knownBoard = boardState;
 	}
@@ -147,15 +143,16 @@ public class Player {
 	 */
 	public void tellNumberHint(int number, ArrayList<Integer> indices, Hand partnerHand, Board boardState) {
 		try {
-			for (int i = 0; i < indices.size(); i++) {
-				int color1 = hand1.get(indices.get(i)).color;
-				Card c1 = new Card(color1, number);
-				hand1.remove(indices.get(i));
-				hand1.add(indices.get(i),c1);
+			for (Integer index : indices) {
+				Card oldCard = playerHand.get(index);
+				Card newCard = oldCard != null ? new Card(oldCard.color, number) : new Card(-1, number);
+				playerHand.remove(index);
+				playerHand.add(index, newCard);
 			}
 		}
-		catch(Exception e){ System.out.println(e);}
-		hand2 = partnerHand;
+		catch(Exception e) {
+			e.printStackTrace();
+		}
 		knownBoard = boardState;
 	}
 	
@@ -181,7 +178,7 @@ public class Player {
 	 */
 	public String ask(int yourHandSize, Hand partnerHand, Board boardState) {
 		// Your method should construct and return a String without user input.
-		
+		return "";
 	}
 
 }
