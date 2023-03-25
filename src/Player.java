@@ -13,7 +13,7 @@ public class Player {
 	Board knownBoard;
 	Hand selfHand; // what you know about your hand (you only know some things)
 	Hand otherHand; // what you know about your partners hand (you know everything)
-	Hand otherHandKB; // what your partner knows about their hand (they only know some things)
+	Hand otherHandP2KB; // what your partner knows about their hand (they only know some things)
 	boolean[] selfDiscardable; // what we can guarantee from our own hand is discardable based on hints
 		// after each move, check whether the card(s) are guaranteed discardable
 	boolean[] selfPlayable; // what we can guarantee from our own hand is playable based on hints
@@ -30,24 +30,20 @@ public class Player {
 	// 3) implement logic for determining discardable and playable hints (** use Board.isLegalPlay)
 	// 		a) logic for whether a card is discardable (see method stub)
 	// 		b) String hint constructor
-
-	// Delete this once you actually write your own version of the class.
-	private static Scanner scn = new Scanner(System.in);
 	
 	/**
 	 * This default constructor should be the only constructor you supply.
 	 */
 	public Player() {
-		selfHand = new Hand(); //Initial Known Hand for Player 1 (current player)
-		otherHand = new Hand(); //Initial Known Hand for Player 2
-		otherHandKB = new Hand(); //What Player 1 knows Player 2 knows about their hand
-		selfDiscardable = new boolean[5];
-		selfPlayable = new boolean[5];
-
-
+		selfHand = new Hand(); // Initial Known Hand for Player 1 (current player)
+		otherHand = new Hand(); // Initial Known Hand for Player 2
+		otherHandP2KB = new Hand(); // What Player 1 knows Player 2 knows about their hand
+		selfDiscardable = new boolean[5]; //An empty array of 5 variables telling which cards can be discarded 
+		selfPlayable = new boolean[5]; // An empty array of 5 variables telling which cards can be played
+		
 		try { //Initializes what the other player knows as a list of null values
 			for (int i = 0; i < 5; i++) {
-				otherHandKB.add(i, null);
+				otherHandP2KB.add(i, null);
 			}
 		}
 		catch(Exception e){
@@ -68,11 +64,11 @@ public class Player {
 	public void tellPartnerDiscard(Hand startHand, Card discard, int disIndex, Card draw, int drawIndex, Hand finalHand, Board boardState) {
 		try{
 			//Removes the card that the player discarded from his own knowledge base (whatever he knew about it)
-			otherHandKB.remove(disIndex);
+			otherHandP2KB.remove(disIndex);
 			//if he draws a card and the deck isn't empty - otherwise does nothing
 			if(draw != null){
 				//adds a null card in the space where he added it in his hand, offsetting any other cards he may know at that index
-				otherHandKB.add(drawIndex, null);
+				otherHandP2KB.add(drawIndex, null);
 			}
 		}  catch (Exception e){
 			System.out.println(e);
@@ -118,11 +114,11 @@ public class Player {
 	public void tellPartnerPlay(Hand startHand, Card play, int playIndex, Card draw, int drawIndex, Hand finalHand, boolean wasLegalPlay, Board boardState) {
 		try{
 			//Removes the card that the player discarded from his own knowledge base (whatever he knew about it)
-			otherHandKB.remove(playIndex);
+			otherHandP2KB.remove(playIndex);
 			//if he draws a card and the deck isn't empty - otherwise does nothing
 			if(draw != null){
 				//adds a null card in the space where he added it in his hand, offsetting any other cards he may know at that index
-				otherHandKB.add(drawIndex, draw);
+				otherHandP2KB.add(drawIndex, draw);
 			}
 		}
 		catch (Exception e){
