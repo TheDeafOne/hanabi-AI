@@ -94,9 +94,7 @@ public class Player {
 				}
 			}
 		}
-		catch(Exception e){
-			System.out.println(e);
-		}
+		catch(Exception e){ e.printStackTrace();}
 		knownBoard = boardState;
 	}
 	
@@ -121,9 +119,7 @@ public class Player {
 				otherHandP2KB.add(drawIndex, draw);
 			}
 		}
-		catch (Exception e){
-			e.printStackTrace();
-		}
+		catch (Exception e){ e.printStackTrace();}
 		// what player 1 knows player 2's hand is 
 		otherHand = finalHand;
 		// what player 1 knows about the board 
@@ -137,7 +133,8 @@ public class Player {
 	 * @param boardState The state of the board after play.
 	 */
 	public void tellYourPlay(Card play, boolean wasLegalPlay, Board boardState) {
-
+		
+		knownBoard = boardState;
 	}
 	
 	/**
@@ -156,9 +153,7 @@ public class Player {
 				selfHand.add(index, newCard);
 			}
 		}
-		catch(Exception e) {
-			e.printStackTrace();
-		}
+		catch(Exception e) {e.printStackTrace();}
 		knownBoard = boardState;
 	}
 	
@@ -178,9 +173,8 @@ public class Player {
 				selfHand.add(index, newCard);
 			}
 		}
-		catch(Exception e) {
-			e.printStackTrace();
-		}
+		catch(Exception e) { e.printStackTrace();}
+		this.otherHand = otherHand;
 		knownBoard = boardState;
 	}
 	
