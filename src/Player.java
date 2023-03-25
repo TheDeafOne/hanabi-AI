@@ -223,25 +223,27 @@ public class Player {
 	}
 
 	public boolean isDiscardable(Card check) {
-		if((check.color != -1) && (check.value == -1)){
-			if(knownBoard.tableau.get(check.color) == 4){ return true;}
-			int nextVal = knownBoard.tableau.get(check.color)+1;
-			if(check.value != nextVal){
+		if((check.color != -1) && (check.value == -1)){ // if you know the color but not the value
+			if(knownBoard.tableau.get(check.color) == 4){ return true;} // if there is already a full stack of 5 for that color
+			int nextVal = knownBoard.tableau.get(check.color)+1; // otherwise find the next value for that color stack
+			if(check.value != nextVal){ // if the card you are checking is not that value ->
 				int numcol = 0;
-				for(Card c1 : knownBoard.discards){
-					if((c1.value == nextVal)&&(c1.color == check.color)){numcol++;}
+				for(Card c1 : knownBoard.discards){ // count how many of that nextVal in that color are already discarded
+					if((c1.value == nextVal)&&(c1.color == check.color)){numcol++;} 
 				}
-				if(numcol == 5){return true;}
+				if(numcol == 5){return true;} // if all 5 in that color and number are already discarded, then you can discard
+											  // since you will never get to the card you have 
 			}
 		}
-		else if((check.color == -1) && (check.value != -1)){
-			for(int i = 0; i < 5; i ++){
+		else if((check.color == -1) && (check.value != -1)){ // if you know the value but not the color
+			for(int i = 0; i < 5; i ++){ // checks to see if any stack could possibly take the number on the card (now or later)
 				if(knownBoard.tableau.get(i) < check.value){ return false;}
 			}
+			return true; // otherwise discard
 		}
-		else if((check.color != -1) && (check.value != -1)){
-			if(knownBoard.tableau.get(check.color) >= check.value) {return true;}
+		else if((check.color != -1) && (check.value != -1)){ // if you know the color and number
+			if(knownBoard.tableau.get(check.color) >= check.value) {return true;} // discard if that number is already on the stack for that color
 		}
-		return false;
+		return false; // default do not discard
 	}
 }
