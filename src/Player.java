@@ -218,13 +218,21 @@ public class Player {
 		
 		
 		
+		
 		return "";
 	}
 
 	public boolean isDiscardable(Card check) {
-		// TODO: if we know something only about color, check if that color is unfinishable (all the next playable cards have been discarded)?
 		if((check.color != -1) && (check.value == -1)){
 			if(knownBoard.tableau.get(check.color) == 4){ return true;}
+			int nextVal = knownBoard.tableau.get(check.color)+1;
+			if(check.value != nextVal){
+				int numcol = 0;
+				for(Card c1 : knownBoard.discards){
+					if((c1.value == nextVal)&&(c1.color == check.color)){numcol++;}
+				}
+				if(numcol == 5){return true;}
+			}
 		}
 		else if((check.color == -1) && (check.value != -1)){
 			for(int i = 0; i < 5; i ++){
