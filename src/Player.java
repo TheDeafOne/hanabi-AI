@@ -13,24 +13,33 @@ public class Player {
 	Board knownBoard;
 	Hand selfHand; // what you know about your hand (you only know some things)
 	Hand otherHand; // what you know about your partners hand (you know everything)
-	Hand otherHandP2KB; // what your partner knows about their hand (they only know some things)
+	Hand otherHandKB; // what your partner knows about their hand (they only know some things)
 	boolean[] selfDiscardable; // what we can guarantee from our own hand is discardable based on hints
 		// after each move, check whether the card(s) are guaranteed discardable
 	boolean[] selfPlayable; // what we can guarantee from our own hand is playable based on hints
 		// after each move, check whether there are guarenteed plays
 		// Special case: if we get a single card hint and it's not discardable, assume it is a guaranteed play
-	boolean[] otherDiscardable; // what we can guarentee the other player can discard 
+	boolean[] otherDiscardable; // what we can guarentee the other player can discard // TODO: remove, we don't care about this, we only care about discardHint
 	boolean[] otherPlayable; // what we can guarentee the other player can play
+		// TODO: should be updated each time we update otherHand and each time we update the board, not necessarily in the ask function
 	String playHint;
 	String discardHint;
+
+	// for use in finding discard hints
+	final int CANNOT_DISCARD = 0;
+	final int DISCARD_BY_COLOR = 1;
+	final int DISCARD_BY_NUMBER = 2;
+	final int DISCARD_BY_EITHER = 3;
+
 	// possible optimization: storing what possible cards could be in our hand (not in board, table, or other's hand)
 
 	//TODO:
 	// 1) implement ranking system - Set up initial values for play, discard, and hint in ask method with some initial if-statements
 	// 2) implement logic for determining whether we have playable and discardable cards
 	// 		(update after each move and after hints received)
-	// 3) implement logic for determining discardable and playable hints (** use Board.isLegalPlay)
+	// 3) implement logic for determining guaranteed discardable and playable hints (** use Board.isLegalPlay) ** DONE - Kat
 	// 		a) String hint constructor
+	// 4) implement logic for producing random hints if we don't have (3)
 	
 	/**
 	 * This default constructor should be the only constructor you supply.
@@ -38,7 +47,7 @@ public class Player {
 	public Player() {
 		selfHand = new Hand(); // Initial Known Hand for Player 1 (current player)
 		otherHand = new Hand(); // Initial Known Hand for Player 2
-		otherHandP2KB = new Hand(); // What Player 1 knows Player 2 knows about their hand
+		otherHandKB = new Hand(); // What Player 1 knows Player 2 knows about their hand
 		selfDiscardable = new boolean[5]; //An empty array of 5 variables telling which cards can be discarded 
 		selfPlayable = new boolean[5]; // An empty array of 5 variables telling which cards can be played
 		otherDiscardable = new boolean[5]; // An empty array of 5 variables telling which of the other player's cards can be discarded
@@ -46,7 +55,7 @@ public class Player {
 		
 		try { //Initializes what the other player knows as a list of null values
 			for (int i = 0; i < 5; i++) {
-				otherHandP2KB.add(i, new Card(-1,-1));
+				otherHandKB.add(i, new Card(-1,-1));
 			}
 		}
 		catch(Exception e){
@@ -67,11 +76,11 @@ public class Player {
 	public void tellPartnerDiscard(Hand startHand, Card discard, int disIndex, Card draw, int drawIndex, Hand finalHand, Board boardState) {
 		try{
 			//Removes the card that the player discarded from his own knowledge base (whatever he knew about it)
-			otherHandP2KB.remove(disIndex);
+			otherHandKB.remove(disIndex);
 			//if he draws a card and the deck isn't empty - otherwise does nothing
 			if(draw != null){
 				//adds a null card in the space where he added it in his hand, offsetting any other cards he may know at that index
-				otherHandP2KB.add(drawIndex, new Card(-1,-1));
+				otherHandKB.add(drawIndex, new Card(-1,-1));
 			}
 		}  catch (Exception e){
 			System.out.println(e);
@@ -115,11 +124,11 @@ public class Player {
 	public void tellPartnerPlay(Hand startHand, Card play, int playIndex, Card draw, int drawIndex, Hand finalHand, boolean wasLegalPlay, Board boardState) {
 		try{
 			//Removes the card that the player discarded from his own knowledge base (whatever he knew about it)
-			otherHandP2KB.remove(playIndex);
+			otherHandKB.remove(playIndex);
 			//if he draws a card and the deck isn't empty - otherwise does nothing
 			if(draw != null){
 				//adds a null card in the space where he added it in his hand, offsetting any other cards he may know at that index
-				otherHandP2KB.add(drawIndex, draw);
+				otherHandKB.add(drawIndex, new Card(-1, -1)); // other player knows nothing about this card
 			}
 		}
 		catch (Exception e){ e.printStackTrace();}
@@ -221,13 +230,13 @@ public class Player {
 		
 		try {
 			for (int i = 0; i < yourHandSize; i++) { // sets all values in selfDiscardable to true or false
-				selfDiscardable[i] = isDiscardable(selfHand.get(i));
+				selfDiscardable[i] = isDiscardableSelf(selfHand.get(i));
 				}
 			} catch (Exception e){e.printStackTrace();}
 
 		try {
 			for (int i = 0; i < otherHand.size(); i++) { // sets all values in otherDiscardable to true or false
-				otherDiscardable[i] = isDiscardable(otherHand.get(i));
+				otherDiscardable[i] = isDiscardableSelf(otherHand.get(i));
 			}
 		} catch (Exception e){e.printStackTrace();}
 		
@@ -260,33 +269,46 @@ public class Player {
 		return "";
 	}
 
-
 	/**
-	 * This method tells whether a card is discardable based on the state of the board.
+	 * This method tells whether a card in self's knowledge base is discardable based on the state of the board.
 	 * @param check The card being checked
-	 * @return a boolean value telling whether the card can be discarded    
+	 * @return a boolean value telling whether the card can be discarded
 	 */
-	public boolean isDiscardable(Card check) {
+	public boolean isDiscardableSelf(Card check) {
 		if((check.color != -1) && (check.value == -1)){ // if you know the color but not the value
-			if(knownBoard.tableau.get(check.color) == 4){ return true;} // if there is already a full stack of 5 for that color
-			int nextVal = knownBoard.tableau.get(check.color)+1; // otherwise find the next value for that color stack
-			if(check.value != nextVal){ // if the card you are checking is not that value ->
-				int numcol = 0;
-				for(Card c1 : knownBoard.discards){ // count how many of that nextVal in that color are already discarded
-					if((c1.value == nextVal)&&(c1.color == check.color)){numcol++;} 
-				}
-				if(numcol == 5){return true;} // if all 5 in that color and number are already discarded, then you can discard
-											  // since you will never get to the card you have 
+			if(knownBoard.tableau.get(check.color) == 5){ return true;} // if there is already a full stack of 5 for that color
+			// otherwise find the next value for that color stack, and check if they are all discarded
+			int nextVal = knownBoard.tableau.get(check.color)+1;
+			int numcol = 0;
+			for(Card c1 : knownBoard.discards){ // count how many of that nextVal in that color are already discarded
+				if((c1.value == nextVal)&&(c1.color == check.color)){numcol++;}
 			}
+			// check if all the next cards have been discarded, where there are three 1s, two 2s 3s and 4s, and one 5
+			if ((nextVal == 1 && numcol == 3) || (nextVal > 1 && nextVal < 5 && numcol == 2) || (nextVal == 5 && numcol == 1)) {
+				return true;
+			}
+			// TODO: enhancement -> could add checking whether the other player's hand has all possible playable cards of this color (probably too much overhead)
 		}
 		else if((check.color == -1) && (check.value != -1)){ // if you know the value but not the color
 			for(int i = 0; i < 5; i ++){ // checks to see if any stack could possibly take the number on the card (now or later)
-				if(knownBoard.tableau.get(i) < check.value){ return false;}
+				if(knownBoard.tableau.get(i) < check.value){ return false;} // not discardable if it's possible
 			}
-			return true; // otherwise discard
+			return true; // otherwise discard because of its number
 		}
 		else if((check.color != -1) && (check.value != -1)){ // if you know the color and number
 			if(knownBoard.tableau.get(check.color) >= check.value) {return true;} // discard if that number is already on the stack for that color
+			// check if the next cards for this color have all been discarded (ex. catches case if all red 2s have been discarded, our red 5 is discardable)
+			if (knownBoard.tableau.get(check.color) != 5) {
+				int nextVal = knownBoard.tableau.get(check.color)+1;
+				int numcol = 0;
+				for(Card c1 : knownBoard.discards){ // count how many of that nextVal in that color are already discarded
+					if((c1.value == nextVal)&&(c1.color == check.color)){numcol++;}
+				}
+				// check if all the next cards have been discarded, where there are three 1s, two 2s 3s and 4s, and one 5
+				if ((nextVal == 1 && numcol == 3) || (nextVal > 1 && nextVal < 5 && numcol == 2) || (nextVal == 5 && numcol == 1)) {
+					return true;
+				}
+			}
 		}
 		return false; // default do not discard
 	}
@@ -298,5 +320,213 @@ public class Player {
 	 */
 	public boolean isPlayable(Card check){
 		return knownBoard.isLegalPlay(check); // calls the isLegalPlay method of Board based on our known board 
+	}
+	
+	/**
+	 * This method tells whether a card in is discardable based on the state of the board.
+	 * @param idx The index of card being checked from otherHand
+	 * @return an int value telling whether the card can be discarded, where
+	 * 	 		CANNOT_DISCARD indicates it is not discardable,
+	 * 	 		DISCARD_BY_COLOR indicates it is discardable because of its number,
+	 * 			DISCARD_BY_NUMBER indicates it is discardable because of its color, and
+	 * 			DISCARD_BY_EITHER indicates it is discardable because of either its number or its color
+	 */
+	public int isDiscardableOther(int idx) {
+		Card check;
+		try {
+			check = otherHand.get(idx);
+			// 1) possible color only hints
+			boolean gotColorDiscard = false;
+			// 1a) that color stack is full
+			if(knownBoard.tableau.get(check.color) == 5){
+				gotColorDiscard = true;
+				// 1b) the next value on the color stack have all been discarded
+			} else {
+				int nextVal = knownBoard.tableau.get(check.color)+1;
+				int numcol = 0;
+				for(Card c1 : knownBoard.discards){ // count how many of that nextVal in that color are already discarded
+					if((c1.value == nextVal)&&(c1.color == check.color)){numcol++;}
+				}
+				// check if all the next cards have been discarded, where there are three 1s, two 2s 3s and 4s, and one 5
+				if ((nextVal == 1 && numcol == 3) || (nextVal > 1 && nextVal < 5 && numcol == 2) || (nextVal == 5 && numcol == 1)) {
+					gotColorDiscard = true;
+				}
+				// TODO: potential runtime time optimization - keeping a data structure of dead colors
+			}
+
+			// 2) possible number only hints
+			boolean gotNumberDiscard = true;
+			for(int i = 0; i < 5; i ++){ // checks to see if any stack could possibly take the number on the card (now or later)
+				if(knownBoard.tableau.get(i) < check.value){ gotNumberDiscard = false;} // not discardable if it's possible
+			}
+
+			// 3) discardable because already in play - would need to already know both color or number
+			// 		(there may be some overlap between this and 1 and 2, which is okay)
+			if (knownBoard.tableau.get(check.color) >= check.value) { // if the card has already been played
+				if (otherHandKB.get(idx).color != -1) {
+					gotNumberDiscard = true;
+				}
+				if (otherHandKB.get(idx).value != -1) {
+					gotColorDiscard = true;
+				}
+			}
+
+			// 4) return appropriate value
+			if (gotNumberDiscard && gotColorDiscard) {
+				return DISCARD_BY_EITHER;
+			} else if (gotNumberDiscard) {
+				return DISCARD_BY_NUMBER;
+			} else if (gotColorDiscard) {
+				return DISCARD_BY_COLOR;
+			} else {
+				return CANNOT_DISCARD;
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * This method finds discard and play hints for otherHand, if they exist, and sets class discardHint and playHint variables accordingly
+	 * 		There are two types of guaranteed discard hints:
+	 * 			(1) those derived solely from the board state,
+	 * 			(2) those derived from the board state AND the other players existing knowledge of their own hand
+	 * 				ex. if they know a card is a 2, and they only need to know it is yellow to play it
+	 * 				note: these could give extra information while still guaranteeing a discard
+	 * 		In a similar way, there are two types of guaranteed play hints:
+	 * 			(1) those derived from assuming single card hints are playable hints
+	 * 			(2) those derived from the board state AND the other players existing knowledge of their own hand
+	 * TODO: not sure if this would be a problem, but how do we make sure we aren't giving hints that give no new information?
+	 */
+	public void findHints() {
+		try {
+			int[] discardable = new int[5];
+				// each value is DISCARD_BY_EITHER (3), DISCARD_BY_NUMBER (2), DISCARD_BY_COLOR (1), or CANNOT_DISCARD (0)
+			// this method uses the class variable otherPlayable
+			int maxNumDiscard = 0; // max possible discardable cards using a number hint
+			int maxNumDiscardIdx = -1;
+			int maxColorDiscard = 0; // max possible discardable cards using a color hint
+			int maxColorDiscardIdx = -1;
+
+			int numDiscard; // intermediate counter for number of discardable cards using a number hint
+			int colorDiscard; // intermediate counter for number of discardable cards using a color hint
+
+			boolean colorPlay; // tracker for whether play hint can guarenteed using a color hint
+			boolean numPlay; // tracker for whether play hint can guarenteed using a number hint
+			int colorPlayIdx = -1;
+			int numPlayIdx = -1;
+
+			int hintColor; // holds potential hint card's color
+			int hintNumber; // holds potential hint card's number
+
+			Card compare; // holds current card being compared to the potential hint card
+
+			// 1) find all discardable cards, and what makes them discardable #### find all playable cards (already done elsewhere)
+			for (int i = 0; i<5; i++) {
+				discardable[i] = isDiscardableOther(i);
+			}
+
+			// 2) find max number of discards possible via hints #### find other's playable hints
+			for (int i=0; i<5; i++) {
+				if (discardable[i] != CANNOT_DISCARD || otherPlayable[i]) {
+					hintColor = otherHand.get(i).color;
+					hintNumber = otherHand.get(i).value;
+					colorDiscard = 0;
+					numDiscard = 0;
+
+					if (otherPlayable[i]) {
+						colorPlay = true; // need assumed true start values for the play hint section below (see *)
+						numPlay = true;
+					} else {
+						colorPlay = false; // so we don't log incorrect guaranteed plays
+						numPlay = false;
+					}
+
+					// compare values for this card, finding guaranteed hints that cover multiple cards if possible
+					for (int j=0; j<5; j++) {
+						// discard cases:
+						if (j != i && discardable[i] != CANNOT_DISCARD) { // don't compare it to itself
+							compare = otherHand.get(j);
+							if (colorDiscard != -1 && compare.color == hintColor && (discardable[j] == DISCARD_BY_COLOR || discardable[j] == DISCARD_BY_EITHER)) {
+								colorDiscard++; // color of discardable card overlaps with our discardable card
+							} else if (compare.color == hintColor && (discardable[j] != DISCARD_BY_COLOR && discardable[j] != DISCARD_BY_EITHER)) { // TODO am I thinking about this right? I think so...
+								colorDiscard = -1; // non-guaranteed hint
+								// i.e. as far as the other player can discern, there are other potentially playable cards of the same color
+							}
+							if (numDiscard != -1 && compare.value == hintNumber && (discardable[j] == DISCARD_BY_NUMBER || discardable[j] == DISCARD_BY_EITHER)) {
+								numDiscard++; // number of discardable card overlaps with our discardable card
+							} else if (compare.value == hintNumber && (discardable[j] != DISCARD_BY_NUMBER && discardable[j] != DISCARD_BY_EITHER)) {
+								numDiscard = -1; // non-guaranteed hint
+								// i.e. as far as the other player can discern, there are other potentially playable cards of the same number
+							}
+						}
+						// playable cases: check if there is anything unique we can hint about (*)
+						if (j!=i && otherPlayable[i]) {
+							compare = otherHand.get(j);
+							if (hintColor == compare.color) {
+								colorPlay = false;
+							}
+							if (hintNumber == compare.value) {
+								numPlay = false;
+							}
+						}
+					}
+
+					// check for guaranteed play and discard hints we can acquire using the other player's knowledge base
+					// 		NOTE: potentially gives extra information, but still guarantees at least 1 discard or play
+					if (knownBoard.tableau.get(hintColor) >= hintNumber) { // if the card has already been played
+						if (otherHandKB.get(i).color != -1) {
+							if (numDiscard < 1) {numDiscard = 1;} // i.e. we don't want to override larger hint values
+						}
+						if (otherHandKB.get(i).value != -1) {
+							if (colorDiscard < 1) colorDiscard = 1;
+						}
+					}
+					if (otherPlayable[i] && otherHandKB.get(i).value != -1) {
+						colorPlay = true;
+					} else if (otherPlayable[i] && otherHandKB.get(i).value != -1) {
+						numPlay = true;
+					}
+
+					// update max discardable counts and indices
+					if (numDiscard > maxNumDiscard) {
+						maxNumDiscard = numDiscard;
+						maxNumDiscardIdx = i;
+					}
+					if (colorDiscard > maxColorDiscard) {
+						maxColorDiscard = colorDiscard;
+						maxColorDiscardIdx = i;
+					}
+
+					// update single play indices
+					if (numPlay) {
+						numPlayIdx = i;
+					}
+					if (colorPlay) {
+						colorPlayIdx = i;
+					}
+				}
+			}
+
+			// 3) extract any possible discard hint and any possible play hint
+			if (maxNumDiscard > 0 || maxColorDiscard > 0) { // if we did find a hint
+				if (maxNumDiscard > maxColorDiscard) { // pick the largest hint, defaulting to the color hint
+					discardHint = "NUMBERHINT " + maxNumDiscardIdx;
+				} else {
+					discardHint = "COLORHINT " + maxColorDiscardIdx;
+				}
+			} else {
+				discardHint = null; // indicates that there is no discard hint
+			}
+
+			if (numPlayIdx != -1) {
+				playHint = "NUMBERHINT " + numPlayIdx;
+			} else if (colorPlayIdx != -1) {
+				playHint = "COLORHINT " + colorPlayIdx;
+			}
+			// TODO: currently prioritizes number hints and has no preference for other knowledge-base hints (2) vs. single card hints (1),
+			//  could alter/optimize selection ---- knowledge-base hints (type 2) may be more useful...
+		}
+		catch(Exception e) { e.printStackTrace();}
 	}
 }
