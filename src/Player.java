@@ -19,6 +19,8 @@ public class Player {
 	boolean[] selfPlayable; // what we can guarantee from our own hand is playable based on hints
 		// after each move, check whether there are guarenteed plays
 		// Special case: if we get a single card hint and it's not discardable, assume it is a guaranteed play
+	boolean[] otherDiscardable; // what we can guarentee the other player can discard 
+	boolean[] otherPlayable; // what we can guarentee the other player can play
 	String playHint;
 	String discardHint;
 	// possible optimization: storing what possible cards could be in our hand (not in board, table, or other's hand)
@@ -43,7 +45,7 @@ public class Player {
 		
 		try { //Initializes what the other player knows as a list of null values
 			for (int i = 0; i < 5; i++) {
-				otherHandP2KB.add(i, null);
+				otherHandP2KB.add(i, new Card(-1,-1));
 			}
 		}
 		catch(Exception e){
@@ -68,7 +70,7 @@ public class Player {
 			//if he draws a card and the deck isn't empty - otherwise does nothing
 			if(draw != null){
 				//adds a null card in the space where he added it in his hand, offsetting any other cards he may know at that index
-				otherHandP2KB.add(drawIndex, null);
+				otherHandP2KB.add(drawIndex, new Card(-1,-1));
 			}
 		}  catch (Exception e){
 			System.out.println(e);
@@ -157,7 +159,8 @@ public class Player {
 		try {
 			for (Integer index : indices) {
 				Card oldCard = selfHand.get(index);
-				Card newCard = oldCard != null ? new Card(oldCard.color, color) : new Card(color, -1);
+				//Card newCard = oldCard != null ? new Card(color, oldCard.value) : new Card(color, -1); Deprecated
+				Card newCard = new Card(color, oldCard.value);
 				selfHand.remove(index);
 				selfHand.add(index, newCard);
 			}
@@ -177,7 +180,8 @@ public class Player {
 		try {
 			for (Integer index : indices) {
 				Card oldCard = selfHand.get(index);
-				Card newCard = oldCard != null ? new Card(oldCard.value, number) : new Card(-1, number);
+				//Card newCard = oldCard != null ? new Card(oldCard.value, number) : new Card(-1, number); Deprecated
+				Card newCard = new Card(oldCard.color, number);
 				selfHand.remove(index);
 				selfHand.add(index, newCard);
 			}
@@ -220,6 +224,9 @@ public class Player {
 	public boolean isDiscardable(Card check) {
 		// TODO: if we know something only about color, check if that color is finished or unfinishable (all the next playable cards have been discarded)
 		// TODO: if we know something only about the number, check if all stacks have that number or higher
+		if(check.color != null)
+			
+			
 		return false;
 	}
 }
