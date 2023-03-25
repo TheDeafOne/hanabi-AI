@@ -1,6 +1,5 @@
 import java.util.ArrayList;
-import java.util.Scanner;
-import java.util.Stack;
+
 
 /**
  * This is the only class you should edit.
@@ -13,13 +12,17 @@ public class Player {
 	Board knownBoard;
 	Hand selfHand; // what you know about your hand (you only know some things)
 	Hand otherHand; // what you know about your partners hand (you know everything)
-	Hand otherHandP2KB; // what your partner knows about their hand (they only know some things)
-	boolean[] selfDiscardable; // what we can guarantee from our own hand is discardable based on hints
-		// after each move, check whether the card(s) are guaranteed discardable
-	boolean[] selfPlayable; // what we can guarantee from our own hand is playable based on hints
-		// after each move, check whether there are guarenteed plays
-		// Special case: if we get a single card hint and it's not discardable, assume it is a guaranteed play
-	boolean[] otherDiscardable; // what we can guarentee the other player can discard 
+	Hand otherHandKB; // what your partner knows about their hand (they only know some things)
+
+	// what we can guarantee from our own hand is discardable based on hints
+	// after each move, check whether the card(s) are guaranteed discardable
+	boolean[] selfDiscardable;
+
+	// what we can guarantee from our own hand is playable based on hints
+	// after each move, check whether there are guarenteed plays
+	// Special case: if we get a single card hint and it's not discardable, assume it is a guaranteed play
+	boolean[] selfPlayable;
+	boolean[] otherDiscardable; // what we can guarentee the other player can discard
 	boolean[] otherPlayable; // what we can guarentee the other player can play
 	String playHint;
 	String discardHint;
@@ -38,15 +41,18 @@ public class Player {
 	public Player() {
 		selfHand = new Hand(); // Initial Known Hand for Player 1 (current player)
 		otherHand = new Hand(); // Initial Known Hand for Player 2
-		otherHandP2KB = new Hand(); // What Player 1 knows Player 2 knows about their hand
-		selfDiscardable = new boolean[5]; //An empty array of 5 variables telling which cards can be discarded 
+		otherHandKB = new Hand(); // What Player 1 knows Player 2 knows about their hand
+
+		selfDiscardable = new boolean[5]; //An empty array of 5 variables telling which cards can be discarded
 		selfPlayable = new boolean[5]; // An empty array of 5 variables telling which cards can be played
 		otherDiscardable = new boolean[5]; // An empty array of 5 variables telling which of the other player's cards can be discarded
 		otherPlayable = new boolean[5]; // An empty array of 5 variables telling which of the other player's cards can be played
-		
-		try { //Initializes what the other player knows as a list of null values
+
+		// Initialize what we know about our hand and what the other player knows about theirs
+		try {
 			for (int i = 0; i < 5; i++) {
-				otherHandP2KB.add(i, new Card(-1,-1));
+				otherHandKB.add(i, new Card(-1,-1));
+				selfHand.add(i, new Card(-1,-1));
 			}
 		}
 		catch(Exception e){
@@ -66,19 +72,19 @@ public class Player {
 	 */
 	public void tellPartnerDiscard(Hand startHand, Card discard, int disIndex, Card draw, int drawIndex, Hand finalHand, Board boardState) {
 		try{
-			//Removes the card that the player discarded from his own knowledge base (whatever he knew about it)
-			otherHandP2KB.remove(disIndex);
-			//if he draws a card and the deck isn't empty - otherwise does nothing
-			if(draw != null){
-				//adds a null card in the space where he added it in his hand, offsetting any other cards he may know at that index
-				otherHandP2KB.add(drawIndex, new Card(-1,-1));
+			// removes the card that the player discarded from his own knowledge base and from the actual hand
+			otherHandKB.remove(disIndex);
+
+			// if he draws a card and the deck isn't empty
+			if (draw != null){
+				// adds a null card in the space where he added it in his hand, offsetting any other cards he may know at that index
+				otherHandKB.add(drawIndex, new Card(-1,-1));
 			}
 		}  catch (Exception e){
-			System.out.println(e);
+			e.printStackTrace();
 		}
-		// what player 1 knows player 2's hand is 
+		// what player knows about partners hand
 		otherHand = finalHand;
-		// what player 1 knows about the board 
 		knownBoard = boardState;
 	}
 	
@@ -88,19 +94,10 @@ public class Player {
 	 * @param boardState The state of the board after play.
 	 */
 	public void tellYourDiscard(Card discard, Board boardState) {
-		try{
-			//Finds where the discarded card was at in your hand and then removes that index from your known hand
-			for (int i = 0; i < selfHand.size(); i++){
-				if(selfHand.get(i) == discard){
-					selfHand.remove(i);
-					break;
-				}
-			}
-		}
-		catch(Exception e){ e.printStackTrace();}
-		knownBoard = boardState;
+		removeCardFromPlayerHand(discard, boardState);
 	}
-	
+
+
 	/**
 	 * This method runs whenever your partner played a card
 	 * @param startHand The hand your partner started with before playing.
@@ -113,19 +110,22 @@ public class Player {
 	 * @param boardState The state of the board after play.
 	 */
 	public void tellPartnerPlay(Hand startHand, Card play, int playIndex, Card draw, int drawIndex, Hand finalHand, boolean wasLegalPlay, Board boardState) {
-		try{
+		try {
 			//Removes the card that the player discarded from his own knowledge base (whatever he knew about it)
-			otherHandP2KB.remove(playIndex);
+			otherHandKB.remove(playIndex);
+
 			//if he draws a card and the deck isn't empty - otherwise does nothing
 			if(draw != null){
 				//adds a null card in the space where he added it in his hand, offsetting any other cards he may know at that index
-				otherHandP2KB.add(drawIndex, draw);
+				otherHandKB.add(drawIndex, new Card(-1,-1));
 			}
 		}
-		catch (Exception e){ e.printStackTrace();}
-		// what player 1 knows player 2's hand is 
+		catch (Exception e){
+			e.printStackTrace();
+		}
+		// what player knows about partners hand
 		otherHand = finalHand;
-		// what player 1 knows about the board 
+
 		knownBoard = boardState;
 	}
 	
@@ -136,17 +136,7 @@ public class Player {
 	 * @param boardState The state of the board after play.
 	 */
 	public void tellYourPlay(Card play, boolean wasLegalPlay, Board boardState) {
-		try{
-			//Finds where the played card was at in your hand and then removes that index from your known hand
-			for (int i = 0; i < selfHand.size(); i++){
-				if(selfHand.get(i) == play){
-					selfHand.remove(i);
-					break;
-				}
-			}
-		}
-		catch(Exception e){ e.printStackTrace();}
-		knownBoard = boardState;
+		removeCardFromPlayerHand(play, boardState);
 	}
 	
 	/**
@@ -195,7 +185,7 @@ public class Player {
 	/**
 	 * This method runs when the game asks you for your next move.
 	 * @param yourHandSize How many cards you have in hand.
-	 * @param otherHand Your partner's current hand.
+	 * @param partnerHand Your partner's current hand.
 	 * @param boardState The current state of the board.
 	 * @return A string encoding your chosen action. Actions should have one of the following formats; in all cases,
 	 *  "x" and "y" are integers.
@@ -212,50 +202,33 @@ public class Player {
 	 *     This command informs your partner which of his cards have the chosen color. An error will result if none of
 	 *     his cards have that color, or if no hints remain. This command consumes a hint.
 	 */
-	public String ask(int yourHandSize, Hand otherHand, Board boardState) {
-		int numRemainFuses = boardState.numFuses;
-		int numRemainHints = boardState.numHints;
+	public String ask(int yourHandSize, Hand partnerHand, Board boardState) throws Exception {
 		int play = 0;
 		int discard = 0;
 		int hint = 0;
-		
-		try {
-			for (int i = 0; i < yourHandSize; i++) { // sets all values in selfDiscardable to true or false
-				selfDiscardable[i] = isDiscardable(selfHand.get(i));
-				}
-			} catch (Exception e){e.printStackTrace();}
 
-		try {
-			for (int i = 0; i < otherHand.size(); i++) { // sets all values in otherDiscardable to true or false
-				otherDiscardable[i] = isDiscardable(otherHand.get(i));
-			}
-		} catch (Exception e){e.printStackTrace();}
-		
-		try {
-			for (int i = 0; i < yourHandSize; i++) {// sets all values in selfPlayable to true or false
-				selfPlayable[i] = isPlayable(otherHand.get(i));
-			}
-		} catch (Exception e){e.printStackTrace();}
-		
-		try {
-			for (int i = 0; i < otherHand.size(); i++) { // sets all values in otherPlayable to true or false
-				otherPlayable[i] = isPlayable(otherHand.get(i));
-			}
-		} catch (Exception e){e.printStackTrace();}
-		
-		
-		
-		
-		
-		
-		if(numRemainHints == 0){  // if no hints remaining, adjust variables accordingly 
-			hint -= 1000000; 
-			discard += 1000; 
-			play += 500; }
-		if(numRemainFuses < 3){ // if less than 3 fuses remain, adjust play variable accordingly to make it less likely to play
-			play -= 1000;
+		// manage playable and discardable cards for player hand
+		for (int i = 0; i < yourHandSize; i++) {
+			selfDiscardable[i] = isDiscardable(selfHand.get(i)); // sets all values in selfDiscardable to true or false
+			selfPlayable[i] = isPlayable(selfHand.get(i)); // sets all values in selfPlayable to true or false
 		}
-		
+
+		// manage playable and discardable cards for partner hand
+		for (int i = 0; i < otherHand.size(); i++) {
+			otherDiscardable[i] = isDiscardable(otherHand.get(i)); // sets all values in otherDiscardable to true or false
+			otherPlayable[i] = isPlayable(otherHand.get(i));// sets all values in otherPlayable to true or false
+		}
+
+		if(boardState.numHints == 0){  // if no hints remaining, adjust variables accordingly
+			hint -= 2;
+			discard += 2;
+			play += 1;
+		}
+
+		if(boardState.numFuses < 3){ // if less than 3 fuses remain, adjust play variable accordingly to make it less likely to play
+			play -= 1;
+		}
+
 		knownBoard = boardState;
 		return "";
 	}
@@ -264,19 +237,32 @@ public class Player {
 	/**
 	 * This method tells whether a card is discardable based on the state of the board.
 	 * @param check The card being checked
-	 * @return a boolean value telling whether the card can be discarded    
+	 * @return a boolean value telling whether the card can be discarded
 	 */
 	public boolean isDiscardable(Card check) {
-		if((check.color != -1) && (check.value == -1)){ // if you know the color but not the value
-			if(knownBoard.tableau.get(check.color) == 4){ return true;} // if there is already a full stack of 5 for that color
-			int nextVal = knownBoard.tableau.get(check.color)+1; // otherwise find the next value for that color stack
+		// color and number are known
+		if (check.color != -1 && check.value != -1) {
+			// check if card already played
+			if(knownBoard.tableau.get(check.color) >= check.value) {
+				return true;
+			}
+		}
+
+		// known color, not known value
+		if (check.color != -1 && check.value == -1){
+			// if there is already a full stack of 5 for that color
+			if (knownBoard.tableau.get(check.color) == 4) {
+				return true;
+			}
+
+			int nextVal = knownBoard.tableau.get(check.color) + 1; // otherwise find the next value for that color stack
 			if(check.value != nextVal){ // if the card you are checking is not that value ->
 				int numcol = 0;
 				for(Card c1 : knownBoard.discards){ // count how many of that nextVal in that color are already discarded
-					if((c1.value == nextVal)&&(c1.color == check.color)){numcol++;} 
+					if((c1.value == nextVal)&&(c1.color == check.color)){numcol++;}
 				}
 				if(numcol == 5){return true;} // if all 5 in that color and number are already discarded, then you can discard
-											  // since you will never get to the card you have 
+											  // since you will never get to the card you have
 			}
 		}
 		else if((check.color == -1) && (check.value != -1)){ // if you know the value but not the color
@@ -285,18 +271,29 @@ public class Player {
 			}
 			return true; // otherwise discard
 		}
-		else if((check.color != -1) && (check.value != -1)){ // if you know the color and number
-			if(knownBoard.tableau.get(check.color) >= check.value) {return true;} // discard if that number is already on the stack for that color
-		}
 		return false; // default do not discard
 	}
 
 	/**
 	 * This method tells whether a card is playable based on the state of the board using the isLegalPlay Board method.
 	 * @param check The card being checked
-	 * @return a boolean value telling whether the card can be discarded    
+	 * @return a boolean value telling whether the card can be discarded
 	 */
 	public boolean isPlayable(Card check){
-		return knownBoard.isLegalPlay(check); // calls the isLegalPlay method of Board based on our known board 
+		return knownBoard.isLegalPlay(check); // calls the isLegalPlay method of Board based on our known board
+	}
+
+	private void removeCardFromPlayerHand(Card discard, Board boardState) {
+		try{
+			// finds where the discarded card was at in your hand and then removes that index from your known hand
+			for (int i = 0; i < selfHand.size(); i++){
+				if(selfHand.get(i) == discard){
+					selfHand.remove(i);
+					break;
+				}
+			}
+		}
+		catch(Exception e){ e.printStackTrace();}
+		knownBoard = boardState;
 	}
 }
