@@ -133,7 +133,16 @@ public class Player {
 	 * @param boardState The state of the board after play.
 	 */
 	public void tellYourPlay(Card play, boolean wasLegalPlay, Board boardState) {
-		
+		try{
+			//Finds where the played card was at in your hand and then removes that index from your known hand
+			for (int i = 0; i < selfHand.size(); i++){
+				if(selfHand.get(i) == play){
+					selfHand.remove(i);
+					break;
+				}
+			}
+		}
+		catch(Exception e){ e.printStackTrace();}
 		knownBoard = boardState;
 	}
 	
@@ -199,7 +208,12 @@ public class Player {
 	 *     his cards have that color, or if no hints remain. This command consumes a hint.
 	 */
 	public String ask(int yourHandSize, Hand otherHand, Board boardState) {
-		// Your method should construct and return a String without user input.
+		int numRemainFuses = boardState.numFuses;
+		int numRemainHints = boardState.numHints;
+		
+		
+		
+		
 		return "";
 	}
 
