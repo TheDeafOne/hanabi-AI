@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 
 
 /**
@@ -27,6 +28,14 @@ public class Player {
 	String playHint;
 	String discardHint;
 	// possible optimization: storing what possible cards could be in our hand (not in board, table, or other's hand)
+
+	HashMap<Integer, Integer> CARD_MAP = new HashMap<>() {{
+		put(1,3); // there are three 1s in each color
+		put(2,2); // there are two 2s in each color
+		put(3,2); // there are two 3s in each color
+		put(4,2); // there are two 4s in each color
+		put(5,1); // there is one 5 in each color
+	}};
 
 	//TODO:
 	// 1) implement ranking system - Set up initial values for play, discard, and hint in ask method with some initial if-statements
@@ -240,38 +249,41 @@ public class Player {
 	 * @return a boolean value telling whether the card can be discarded
 	 */
 	public boolean isDiscardable(Card check) {
-		// color and number are known
+		// both color and value are known
 		if (check.color != -1 && check.value != -1) {
-			// check if card already played
-			if(knownBoard.tableau.get(check.color) >= check.value) {
-				return true;
-			}
+			// has card already been played
+			return knownBoard.tableau.get(check.color) >= check.value;
+		} else if (check.color != -1){ // only color is known
+			return isCardWithKnownColorDiscardable(check);
+		} else if (check.value != -1) { // only value is known
+			return knownBoard.tableau.stream().allMatch(x -> x >= check.value);
+		}
+		// neither color nor value is known
+		return false;
+	}
+
+	private boolean isCardWithKnownColorDiscardable(Card check) {
+		// if there is already a full stack of 5 for that color
+		if (knownBoard.tableau.get(check.color) == 4) {
+			return true;
 		}
 
-		// known color, not known value
-		if (check.color != -1 && check.value == -1){
-			// if there is already a full stack of 5 for that color
-			if (knownBoard.tableau.get(check.color) == 4) {
-				return true;
-			}
-
-			int nextVal = knownBoard.tableau.get(check.color) + 1; // otherwise find the next value for that color stack
-			if(check.value != nextVal){ // if the card you are checking is not that value ->
-				int numcol = 0;
-				for(Card c1 : knownBoard.discards){ // count how many of that nextVal in that color are already discarded
-					if((c1.value == nextVal)&&(c1.color == check.color)){numcol++;}
+		// check if next card needed is already exhausted by searching through the discarded pile
+		// next value needed on the tableau for this card's color
+		int nextVal = knownBoard.tableau.get(check.color) + 1;
+		if (check.value != nextVal){
+			int numColorDiscarded = 0;
+			// count how many of that nextVal in that color are already discarded
+			for(Card discardedCard : knownBoard.discards){
+				if(discardedCard.value == nextVal && discardedCard.color == check.color) {
+					numColorDiscarded++;
 				}
-				if(numcol == 5){return true;} // if all 5 in that color and number are already discarded, then you can discard
-											  // since you will never get to the card you have
 			}
+
+			// if all n in that color and number are already discarded, then you can discard
+			return numColorDiscarded == CARD_MAP.get(nextVal);
 		}
-		else if((check.color == -1) && (check.value != -1)){ // if you know the value but not the color
-			for(int i = 0; i < 5; i ++){ // checks to see if any stack could possibly take the number on the card (now or later)
-				if(knownBoard.tableau.get(i) < check.value){ return false;}
-			}
-			return true; // otherwise discard
-		}
-		return false; // default do not discard
+		return false;
 	}
 
 	/**
@@ -284,7 +296,7 @@ public class Player {
 	}
 
 	private void removeCardFromPlayerHand(Card discard, Board boardState) {
-		try{
+		try {
 			// finds where the discarded card was at in your hand and then removes that index from your known hand
 			for (int i = 0; i < selfHand.size(); i++){
 				if(selfHand.get(i) == discard){
@@ -292,8 +304,9 @@ public class Player {
 					break;
 				}
 			}
+		}  catch(Exception e) {
+			e.printStackTrace();
 		}
-		catch(Exception e){ e.printStackTrace();}
 		knownBoard = boardState;
 	}
 }
