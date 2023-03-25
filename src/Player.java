@@ -177,6 +177,7 @@ public class Player {
 		}
 		catch(Exception e) {e.printStackTrace();}
 		knownBoard = boardState;
+		//TODO: add logic for interpreting single card hints as playable hints
 	}
 	
 	/**
@@ -199,6 +200,7 @@ public class Player {
 		catch(Exception e) { e.printStackTrace();}
 		this.otherHand = otherHand;
 		knownBoard = boardState;
+		// TODO: add logic for interpreting single card hints as playable hints
 	}
 	
 	/**
@@ -222,6 +224,7 @@ public class Player {
 	 *     his cards have that color, or if no hints remain. This command consumes a hint.
 	 */
 	public String ask(int yourHandSize, Hand otherHand, Board boardState) {
+		// STAGE 1: heuristic (TODO: we could make this the place where we update our knowledge base, so it's all in one place)
 		int numRemainFuses = boardState.numFuses;
 		int numRemainHints = boardState.numHints;
 		int play = 0;
@@ -264,8 +267,35 @@ public class Player {
 		if(numRemainFuses < 3){ // if less than 3 fuses remain, adjust play variable accordingly to make it less likely to play
 			play -= 1000;
 		}
-		
+
 		knownBoard = boardState;
+
+		// STAGE 2: make move
+		// TODO: find max of hint vs. discard vs. play, then call play(), hint(), or discard()
+		return "";
+	}
+
+	/**
+	 * Method for causing the player to play a card, choosing the best card available based on the knowledge base
+	 * @return String representation of play move
+	 */
+	public String play() {
+		return "";
+	}
+
+	/**
+	 * Method for causing the player to hint a card, choosing the best card available based on the knowledge base
+	 * @return String representation of hint move
+	 */
+	public String hint() {
+		return "";
+	}
+
+	/**
+	 * Method for causing the player to discard a card, choosing the best card available based on the knowledge base
+	 * @return String representation of discard move
+	 */
+	public String discard() {
 		return "";
 	}
 
