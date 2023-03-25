@@ -26,12 +26,11 @@ public class Player {
 	// possible optimization: storing what possible cards could be in our hand (not in board, table, or other's hand)
 
 	//TODO:
-	// 1) implement ranking system
+	// 1) implement ranking system - Set up initial values for play, discard, and hint in ask method with some initial if-statements
 	// 2) implement logic for determining whether we have playable and discardable cards
 	// 		(update after each move and after hints received)
 	// 3) implement logic for determining discardable and playable hints (** use Board.isLegalPlay)
-	// 		a) logic for whether a card is discardable (see method stub)
-	// 		b) String hint constructor
+	// 		a) String hint constructor
 	
 	/**
 	 * This default constructor should be the only constructor you supply.
@@ -216,20 +215,46 @@ public class Player {
 	public String ask(int yourHandSize, Hand otherHand, Board boardState) {
 		int numRemainFuses = boardState.numFuses;
 		int numRemainHints = boardState.numHints;
+		int play = 0;
+		int discard = 0;
+		int hint = 0;
 		
 		try {
-			for (int i = 0; i < yourHandSize; i++) {
+			for (int i = 0; i < yourHandSize; i++) { // sets all values in selfDiscardable to true or false
 				selfDiscardable[i] = isDiscardable(selfHand.get(i));
 				}
 			} catch (Exception e){e.printStackTrace();}
 
 		try {
-			for (int i = 0; i < yourHandSize; i++) {
+			for (int i = 0; i < otherHand.size(); i++) { // sets all values in otherDiscardable to true or false
 				otherDiscardable[i] = isDiscardable(otherHand.get(i));
 			}
 		} catch (Exception e){e.printStackTrace();}
-
-
+		
+		try {
+			for (int i = 0; i < yourHandSize; i++) {// sets all values in selfPlayable to true or false
+				selfPlayable[i] = isPlayable(otherHand.get(i));
+			}
+		} catch (Exception e){e.printStackTrace();}
+		
+		try {
+			for (int i = 0; i < otherHand.size(); i++) { // sets all values in otherPlayable to true or false
+				otherPlayable[i] = isPlayable(otherHand.get(i));
+			}
+		} catch (Exception e){e.printStackTrace();}
+		
+		
+		
+		
+		
+		
+		if(numRemainHints == 0){  // if no hints remaining, adjust variables accordingly 
+			hint -= 1000000; 
+			discard += 1000; 
+			play += 500; }
+		if(numRemainFuses < 3){ // if less than 3 fuses remain, adjust play variable accordingly to make it less likely to play
+			play -= 1000;
+		}
 		
 		knownBoard = boardState;
 		return "";
