@@ -42,6 +42,8 @@ public class Player {
 		otherHandP2KB = new Hand(); // What Player 1 knows Player 2 knows about their hand
 		selfDiscardable = new boolean[5]; //An empty array of 5 variables telling which cards can be discarded 
 		selfPlayable = new boolean[5]; // An empty array of 5 variables telling which cards can be played
+		otherDiscardable = new boolean[5]; // An empty array of 5 variables telling which of the other player's cards can be discarded
+		otherPlayable = new boolean[5]; // An empty array of 5 variables telling which of the other player's cards can be played
 		
 		try { //Initializes what the other player knows as a list of null values
 			for (int i = 0; i < 5; i++) {
@@ -215,13 +217,30 @@ public class Player {
 		int numRemainFuses = boardState.numFuses;
 		int numRemainHints = boardState.numHints;
 		
+		try {
+			for (int i = 0; i < yourHandSize; i++) {
+				selfDiscardable[i] = isDiscardable(selfHand.get(i));
+				}
+			} catch (Exception e){e.printStackTrace();}
+
+		try {
+			for (int i = 0; i < yourHandSize; i++) {
+				otherDiscardable[i] = isDiscardable(otherHand.get(i));
+			}
+		} catch (Exception e){e.printStackTrace();}
+
+
 		
-		
-		
-		
+		knownBoard = boardState;
 		return "";
 	}
 
+
+	/**
+	 * This method tells whether a card is discardable based on the state of the board.
+	 * @param check The card being checked
+	 * @return a boolean value telling whether the card can be discarded    
+	 */
 	public boolean isDiscardable(Card check) {
 		if((check.color != -1) && (check.value == -1)){ // if you know the color but not the value
 			if(knownBoard.tableau.get(check.color) == 4){ return true;} // if there is already a full stack of 5 for that color
@@ -245,5 +264,14 @@ public class Player {
 			if(knownBoard.tableau.get(check.color) >= check.value) {return true;} // discard if that number is already on the stack for that color
 		}
 		return false; // default do not discard
+	}
+
+	/**
+	 * This method tells whether a card is playable based on the state of the board using the isLegalPlay Board method.
+	 * @param check The card being checked
+	 * @return a boolean value telling whether the card can be discarded    
+	 */
+	public boolean isPlayable(Card check){
+		return knownBoard.isLegalPlay(check); // calls the isLegalPlay method of Board based on our known board 
 	}
 }
