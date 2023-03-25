@@ -222,11 +222,18 @@ public class Player {
 	}
 
 	public boolean isDiscardable(Card check) {
-		// TODO: if we know something only about color, check if that color is finished or unfinishable (all the next playable cards have been discarded)
-		// TODO: if we know something only about the number, check if all stacks have that number or higher
-		if(check.color != null)
-			
-			
+		// TODO: if we know something only about color, check if that color is unfinishable (all the next playable cards have been discarded)?
+		if((check.color != -1) && (check.value == -1)){
+			if(knownBoard.tableau.get(check.color) == 4){ return true;}
+		}
+		else if((check.color == -1) && (check.value != -1)){
+			for(int i = 0; i < 5; i ++){
+				if(knownBoard.tableau.get(i) < check.value){ return false;}
+			}
+		}
+		else if((check.color != -1) && (check.value != -1)){
+			if(knownBoard.tableau.get(check.color) >= check.value) {return true;}
+		}
 		return false;
 	}
 }
