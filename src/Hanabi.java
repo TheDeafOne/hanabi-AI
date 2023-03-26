@@ -16,7 +16,7 @@ public class Hanabi {
 	 * The basic constructor.
 	 * @param chatty True to print out all useful information about the game; false for speed of play.
 	 */
-	public Hanabi(boolean chatty) {
+	public Hanabi(boolean chatty){
 		boardState = new Board();
 
 		players = new ArrayList<Player>();
@@ -48,20 +48,36 @@ public class Hanabi {
 
 		shuffle();
 
-		// Deals five cards to both players.
-		for (int i = 0; i < 5; i++) {
-			try {
-				Card c = dealCard();
-				hands.get(0).add(0, c);
-				c = dealCard();
-				hands.get(1).add(0, c);
-			}
-			catch (Exception e) {
-				System.out.println(e);
-				return;
-			}
+//		// Deals five cards to both players.
+//		for (int i = 0; i < 5; i++) {
+//			try {
+//				Card c = dealCard();
+//				hands.get(0).add(0, c);
+//				c = dealCard();
+//				hands.get(1).add(0, c);
+//			}
+//			catch (Exception e) {
+//				System.out.println(e);
+//				return;
+//			}
+//
+//		}
+		try {
+			hands.get(0).add(0, new Card(2,5));
+			hands.get(0).add(1, new Card(1,5));
+			hands.get(0).add(2, new Card(2,3));
+			hands.get(0).add(3, new Card(1,4));
+			hands.get(0).add(4, new Card(3,1));
 
+			hands.get(1).add(0, new Card(0,1));
+			hands.get(1).add(1, new Card(2,1));
+			hands.get(1).add(2, new Card(1,1));
+			hands.get(1).add(3, new Card(1,4));
+			hands.get(1).add(4, new Card(0,5));
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
+
 
 		currentPlayer = 0;
 		otherPlayer = 1;

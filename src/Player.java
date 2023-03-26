@@ -234,6 +234,8 @@ public class Player {
 			otherDiscardable[i] = isDiscardable(otherHand.get(i)); // sets all values in otherDiscardable to true or false
 			otherPlayable[i] = knownBoard.isLegalPlay(otherHand.get(i));// sets all values in otherPlayable to true or false
 		}
+
+//		System.out.println(Arrays.toString(selfPlayable));
 		// if any cards are playable, play them
 		for (int i = 0; i < selfPlayable.length; i++) {
 			if (selfPlayable[i]) {
@@ -265,6 +267,7 @@ public class Player {
 	 * @return String representation of play move
 	 */
 	public String play(int index) {
+		selfPlayable[index] = false;
 		return String.format("PLAY %d %d",index,index);
 	}
 
