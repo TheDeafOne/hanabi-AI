@@ -457,7 +457,6 @@ public class Player {
 
 		// 2) find max number of discards possible via hints #### find other's playable hints
 		for (int i=0; i<5; i++) {
-			System.out.println("hint loop at " + i);
 			if (discardable[i] != DiscardType.CANNOT_DISCARD || otherPlayable[i]) {
 				hintColor = otherHand.get(i).color;
 				hintNumber = otherHand.get(i).value;
@@ -571,10 +570,23 @@ public class Player {
 		for (int i = 0; i < otherHand.size(); i++) {
 			colorMap[otherHand.get(i).color] += 1;
 		}
-		int maxIndex = 0;
+		int maxColorIndex = 0;
 		for (int i = 0; i < colorMap.length; i++) {
-			maxIndex = colorMap[i] > colorMap[maxIndex] ? i : maxIndex;
+			maxColorIndex = colorMap[i] > colorMap[maxColorIndex] ? i : maxColorIndex;
 		}
-		return "COLORHINT " + otherHand.get(maxIndex).color; //TODO: make this a proper random hint
+
+		int[] numberMap = {0, 0, 0, 0, 0};
+		for (int i = 0; i < otherHand.size(); i++) {
+			numberMap[otherHand.get(i).value-1] += 1;
+		}
+		int maxNumberIndex = 0;
+		for (int i = 0; i < numberMap.length; i++) {
+			maxNumberIndex = numberMap[i] > numberMap[maxNumberIndex] ? i : maxNumberIndex;
+		}
+
+		if (maxNumberIndex > maxColorIndex) {
+			return "NUMBERHINT " + otherHand.get(maxNumberIndex).value;
+		}
+		return "COLORHINT " + otherHand.get(maxColorIndex).color;
 	}
 }
