@@ -1,5 +1,7 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
+import java.util.Random;
 
 
 /**
@@ -253,28 +255,10 @@ public class Player {
 		}
 
 		findHints();
-
+		System.out.println(discardHint);
+		System.out.println(playHint);
 		//TODO: possibly consider the board when deciding what hint type to pick
-		if (discardHint != null) {
-			return discardHint;
-		}
-		return playHint;
-//
-//		if(boardState.numHints == 0){  // if no hints remaining, adjust variables accordingly
-//			hint -= 2;
-//			discard += 2;
-//			play += 1;
-//		}
-//
-//		if(boardState.numFuses < 3){ // if less than 3 fuses remain, adjust play variable accordingly to make it less likely to play
-//			play -= 1;
-//		}
-//
-//
-//		// STAGE 2: make move
-//		// TODO: find max of hint vs. discard vs. play, then call play(), hint(), or discard()
-//
-//		return "";
+		return hint();
 	}
 
 	/**
@@ -289,8 +273,14 @@ public class Player {
 	 * Method for causing the player to hint a card, choosing the best card available based on the knowledge base
 	 * @return String representation of hint move
 	 */
-	public String hint() {
-		return "";
+	public String hint() throws Exception {
+		if (discardHint == null && playHint == null) {
+			return randomHint();
+		}
+		if (discardHint != null) {
+			return discardHint;
+		}
+		return playHint;
 	}
 
 	/**
@@ -464,8 +454,10 @@ public class Player {
 			discardable[i] = isDiscardableOther(i);
 		}
 
+
 		// 2) find max number of discards possible via hints #### find other's playable hints
 		for (int i=0; i<5; i++) {
+			System.out.println("hint loop at " + i);
 			if (discardable[i] != DiscardType.CANNOT_DISCARD || otherPlayable[i]) {
 				hintColor = otherHand.get(i).color;
 				hintNumber = otherHand.get(i).value;
@@ -553,23 +545,36 @@ public class Player {
 			}
 		}
 
+
 		// 3) extract any possible discard hint and any possible play hint
 		if (maxNumDiscard > 0 || maxColorDiscard > 0) { // if we did find a hint
 			if (maxNumDiscard > maxColorDiscard) { // pick the largest hint, defaulting to the color hint
-				discardHint = "NUMBERHINT " + maxNumDiscardIdx;
+				discardHint = "NUMBERHINT " + otherHand.get(maxNumDiscardIdx).value;
 			} else {
-				discardHint = "COLORHINT " + maxColorDiscardIdx;
+				discardHint = "COLORHINT " + otherHand.get(maxNumDiscardIdx).color;
 			}
 		} else {
 			discardHint = null; // indicates that there is no discard hint
 		}
 
 		if (numPlayIdx != -1) {
-			playHint = "NUMBERHINT " + numPlayIdx;
+			playHint = "NUMBERHINT " + otherHand.get(numPlayIdx).value;
 		} else if (colorPlayIdx != -1) {
-			playHint = "COLORHINT " + colorPlayIdx;
+			playHint = "COLORHINT " + otherHand.get(colorPlayIdx).color;
 		}
 		// TODO: currently prioritizes number hints and has no preference for other knowledge-base hints (2) vs. single card hints (1),
 		//  could alter/optimize selection ---- knowledge-base hints (type 2) may be more useful...
+	}
+
+	private String randomHint() throws Exception {
+		int[] colorMap = {0, 0, 0, 0, 0};
+		for (int i = 0; i < otherHand.size(); i++) {
+			colorMap[otherHand.get(i).color] += 1;
+		}
+		int maxIndex = 0;
+		for (int i = 0; i < colorMap.length; i++) {
+			maxIndex = colorMap[i] > colorMap[maxIndex] ? i : maxIndex;
+		}
+		return "COLORHINT " + otherHand.get(maxIndex).color; //TODO: make this a proper random hint
 	}
 }
