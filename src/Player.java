@@ -17,19 +17,14 @@ public class Player {
 	DiscardType[] selfDiscardable; // what we can guarantee from our own hand is discardable based on hints
 		// after each move, check whether the card(s) are guaranteed discardable
 	boolean[] selfPlayable; // what we can guarantee from our own hand is playable based on hints
-		// after each move, check whether there are guarenteed plays
-		// Special case: if we get a single card hint and it's not discardable, assume it is a guaranteed play
+comme	// after each move, check whether there are guarenteed plays
+	// Special case: if we get a single card hint, and it's not discardable, assume it is a guaranteed play
 	DiscardType[] otherDiscardable; // what we can guarentee the other player can discard // TODO: remove, we don't care about this, we only care about discardHint
 	boolean[] otherPlayable; // what we can guarentee the other player can play
 		// TODO: should be updated each time we update otherHand and each time we update the board, not necessarily in the ask function
 	String playHint;
 	String discardHint;
 
-	// for use in finding discard hints
-	final int CANNOT_DISCARD = 0;
-	final int DISCARD_BY_COLOR = 1;
-	final int DISCARD_BY_NUMBER = 2;
-	final int DISCARD_BY_EITHER = 3;
 
 	// possible optimization: storing what possible cards could be in our hand (not in board, table, or other's hand)
 
