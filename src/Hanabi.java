@@ -62,21 +62,6 @@ public class Hanabi {
 			}
 
 		}
-//		try {
-//			hands.get(0).add(0, new Card(2,5));
-//			hands.get(0).add(1, new Card(1,5));
-//			hands.get(0).add(2, new Card(2,3));
-//			hands.get(0).add(3, new Card(1,4));
-//			hands.get(0).add(4, new Card(3,1));
-//
-//			hands.get(1).add(0, new Card(0,1));
-//			hands.get(1).add(1, new Card(2,1));
-//			hands.get(1).add(2, new Card(1,1));
-//			hands.get(1).add(3, new Card(1,4));
-//			hands.get(1).add(4, new Card(0,5));
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
 
 
 		currentPlayer = 0;
@@ -133,6 +118,7 @@ public class Hanabi {
 	 */
 	public void shuffle() {
 		Random rand = new Random();
+		rand.setSeed(0);
 		for (int i = deck.size() - 1; i >= 1; i--) {
 			int j = rand.nextInt(i + 1);
 			Card temp = deck.get(j);
