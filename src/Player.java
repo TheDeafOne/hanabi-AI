@@ -160,19 +160,18 @@ public class Player {
 	 * @param otherHand Your partner's current hand.
 	 * @param boardState The state of the board after the hint.
 	 */
-	public void tellColorHint(int color, ArrayList<Integer> indices, Hand otherHand, Board boardState) {
-		try {
-			for (Integer index : indices) {
-				Card oldCard = selfHand.get(index);
-				//Card newCard = oldCard != null ? new Card(color, oldCard.value) : new Card(color, -1); Deprecated
-				Card newCard = new Card(color, oldCard.value);
-				selfHand.remove(index);
-				selfHand.add(index, newCard);
-			}
+	public void tellColorHint(int color, ArrayList<Integer> indices, Hand otherHand, Board boardState) throws Exception {
+		for (Integer index : indices) {
+			Card oldCard = selfHand.get(index);
+			Card newCard = new Card(color, oldCard.value);
+			selfHand.remove(index);
+			selfHand.add(index, newCard);
 		}
-		catch(Exception e) {e.printStackTrace();}
+
 		knownBoard = boardState;
-		//TODO: add logic for interpreting single card hints as playable hints
+		if (indices.size() == 1) {
+			selfPlayable[indices.get(0)] = true;
+		}
 	}
 	
 	/**
@@ -186,16 +185,19 @@ public class Player {
 		try {
 			for (Integer index : indices) {
 				Card oldCard = selfHand.get(index);
-				//Card newCard = oldCard != null ? new Card(oldCard.value, number) : new Card(-1, number); Deprecated
 				Card newCard = new Card(oldCard.color, number);
 				selfHand.remove(index);
 				selfHand.add(index, newCard);
 			}
+		} catch(Exception e) {
+			e.printStackTrace();
 		}
-		catch(Exception e) { e.printStackTrace();}
 		this.otherHand = otherHand;
 		knownBoard = boardState;
-		// TODO: add logic for interpreting single card hints as playable hints
+
+		if (indices.size() == 1) {
+			selfPlayable[indices.get(0)] = true;
+		}
 	}
 	
 	/**
@@ -219,14 +221,14 @@ public class Player {
 	 *     his cards have that color, or if no hints remain. This command consumes a hint.
 	 */
 	public String ask(int yourHandSize, Hand partnerHand, Board boardState) throws Exception {
-		int play = 0;
-		int discard = 0;
-		int hint = 0;
+//		int play = 0;
+//		int discard = 0;
+//		int hint = 0;
+		knownBoard = boardState;
 
-		// manage playable and discardable cards for player hand
+		// manage discardable cards for player hand
 		for (int i = 0; i < yourHandSize; i++) {
 			selfDiscardable[i] = isDiscardable(selfHand.get(i)); // sets all values in selfDiscardable to true or false
-			selfPlayable[i] = knownBoard.isLegalPlay(selfHand.get(i)); // sets all values in selfPlayable to true or false
 		}
 
 		// manage playable and discardable cards for partner hand
@@ -235,29 +237,56 @@ public class Player {
 			otherPlayable[i] = knownBoard.isLegalPlay(otherHand.get(i));// sets all values in otherPlayable to true or false
 		}
 
-		if(boardState.numHints == 0){  // if no hints remaining, adjust variables accordingly
-			hint -= 2;
-			discard += 2;
-			play += 1;
+		// if any cards are playable, play them
+		for (int i = 0; i < selfPlayable.length; i++) {
+			if (selfPlayable[i]) {
+				return play(i);
+			}
 		}
 
-		if(boardState.numFuses < 3){ // if less than 3 fuses remain, adjust play variable accordingly to make it less likely to play
-			play -= 1;
+		// if any cards are discardable, discard them
+		for (int i = 0; i < selfDiscardable.length; i++) {
+			if (selfDiscardable[i] != DiscardType.CANNOT_DISCARD) {
+				return discard(i);
+			}
 		}
 
-		knownBoard = boardState;
+		if (boardState.numHints == 0) {
+			//TODO: make logic for picking card that has the most information
+			return discard(0);
+		}
 
-		// STAGE 2: make move
-		// TODO: find max of hint vs. discard vs. play, then call play(), hint(), or discard()
-		return "";
+		findHints();
+
+		//TODO: possibly consider the board when deciding what hint type to pick
+		if (discardHint != null) {
+			return discardHint;
+		}
+		return playHint;
+//
+//		if(boardState.numHints == 0){  // if no hints remaining, adjust variables accordingly
+//			hint -= 2;
+//			discard += 2;
+//			play += 1;
+//		}
+//
+//		if(boardState.numFuses < 3){ // if less than 3 fuses remain, adjust play variable accordingly to make it less likely to play
+//			play -= 1;
+//		}
+//
+//
+//		// STAGE 2: make move
+//		// TODO: find max of hint vs. discard vs. play, then call play(), hint(), or discard()
+//
+//		return "";
 	}
 
 	/**
 	 * Method for causing the player to play a card, choosing the best card available based on the knowledge base
 	 * @return String representation of play move
 	 */
-	public String play() {
-		return "";
+	public String play(int index) {
+		return String.format("PLAY %d %d",index,index);
 	}
 
 	/**
@@ -272,8 +301,8 @@ public class Player {
 	 * Method for causing the player to discard a card, choosing the best card available based on the knowledge base
 	 * @return String representation of discard move
 	 */
-	public String discard() {
-		return "";
+	public String discard(int index) {
+		return String.format("DISCARD %d %d", index, index);
 	}
 
 
@@ -347,137 +376,133 @@ public class Player {
 	 * 			(2) those derived from the board state AND the other players existing knowledge of their own hand
 	 * TODO: not sure if this would be a problem, but how do we make sure we aren't giving hints that give no new information?
 	 */
-	public void findHints() {
-		try {
+	public void findHints() throws Exception {
 //			int[] discardable = new int[5];
-				// each value is DISCARD_BY_EITHER (3), DISCARD_BY_NUMBER (2), DISCARD_BY_COLOR (1), or CANNOT_DISCARD (0)
-			// this method uses the class variable otherPlayable
-			int maxNumDiscard = 0; // max possible discardable cards using a number hint
-			int maxNumDiscardIdx = -1;
-			int maxColorDiscard = 0; // max possible discardable cards using a color hint
-			int maxColorDiscardIdx = -1;
+		// each value is DISCARD_BY_EITHER (3), DISCARD_BY_NUMBER (2), DISCARD_BY_COLOR (1), or CANNOT_DISCARD (0)
+		// this method uses the class variable otherPlayable
+		int maxNumDiscard = 0; // max possible discardable cards using a number hint
+		int maxNumDiscardIdx = -1;
+		int maxColorDiscard = 0; // max possible discardable cards using a color hint
+		int maxColorDiscardIdx = -1;
 
-			int numDiscard; // intermediate counter for number of discardable cards using a number hint
-			int colorDiscard; // intermediate counter for number of discardable cards using a color hint
+		int numDiscard; // intermediate counter for number of discardable cards using a number hint
+		int colorDiscard; // intermediate counter for number of discardable cards using a color hint
 
-			boolean colorPlay; // tracker for whether play hint can guarenteed using a color hint
-			boolean numPlay; // tracker for whether play hint can guarenteed using a number hint
-			int colorPlayIdx = -1;
-			int numPlayIdx = -1;
+		boolean colorPlay; // tracker for whether play hint can guarenteed using a color hint
+		boolean numPlay; // tracker for whether play hint can guarenteed using a number hint
+		int colorPlayIdx = -1;
+		int numPlayIdx = -1;
 
-			int hintColor; // holds potential hint card's color
-			int hintNumber; // holds potential hint card's number
+		int hintColor; // holds potential hint card's color
+		int hintNumber; // holds potential hint card's number
 
-			Card compare; // holds current card being compared to the potential hint card
+		Card compare; // holds current card being compared to the potential hint card
 
 //			// 1) find all discardable cards, and what makes them discardable #### find all playable cards (already done elsewhere)
 //			for (int i = 0; i<5; i++) {
 //				discardable[i] = isDiscardableOther(i).ordinal();
 //			}
 
-			// 2) find max number of discards possible via hints #### find other's playable hints
-			for (int i=0; i<5; i++) {
-				if (otherDiscardable[i] != DiscardType.CANNOT_DISCARD || otherPlayable[i]) {
-					hintColor = otherHand.get(i).color;
-					hintNumber = otherHand.get(i).value;
-					colorDiscard = 0;
-					numDiscard = 0;
+		// 2) find max number of discards possible via hints #### find other's playable hints
+		for (int i=0; i<5; i++) {
+			// pretty sure these aren't mutually exclusive, but gonna keep this here in case I'm missing something
+			if (otherDiscardable[i] != DiscardType.CANNOT_DISCARD && !otherPlayable[i]) {
+				hintColor = otherHand.get(i).color;
+				hintNumber = otherHand.get(i).value;
+				colorDiscard = 0;
+				numDiscard = 0;
 
-					if (otherPlayable[i]) {
-						colorPlay = true; // need assumed true start values for the play hint section below (see *)
-						numPlay = true;
-					} else {
-						colorPlay = false; // so we don't log incorrect guaranteed plays
-						numPlay = false;
-					}
-
-					// compare values for this card, finding guaranteed hints that cover multiple cards if possible
-					for (int j=0; j<5; j++) {
-						// discard cases:
-						if (j != i && otherDiscardable[i] != DiscardType.CANNOT_DISCARD) { // don't compare it to itself
-							compare = otherHand.get(j);
-							if (colorDiscard != -1 && compare.color == hintColor && (otherDiscardable[j] == DiscardType.DISCARD_BY_COLOR || otherDiscardable[j] == DiscardType.DISCARD_BY_EITHER)) {
-								colorDiscard++; // color of discardable card overlaps with our discardable card
-							} else if (compare.color == hintColor && (otherDiscardable[j] != DiscardType.DISCARD_BY_COLOR && otherDiscardable[j] != DiscardType.DISCARD_BY_EITHER)) { // TODO am I thinking about this right? I think so...
-								colorDiscard = -1; // non-guaranteed hint
-								// i.e. as far as the other player can discern, there are other potentially playable cards of the same color
-							}
-							if (numDiscard != -1 && compare.value == hintNumber && (otherDiscardable[j] == DiscardType.DISCARD_BY_NUMBER || otherDiscardable[j] == DiscardType.DISCARD_BY_EITHER)) {
-								numDiscard++; // number of discardable card overlaps with our discardable card
-							} else if (compare.value == hintNumber && (otherDiscardable[j] != DiscardType.DISCARD_BY_NUMBER && otherDiscardable[j] != DiscardType.DISCARD_BY_EITHER)) {
-								numDiscard = -1; // non-guaranteed hint
-								// i.e. as far as the other player can discern, there are other potentially playable cards of the same number
-							}
-						}
-						// playable cases: check if there is anything unique we can hint about (*)
-						if (j!=i && otherPlayable[i]) {
-							compare = otherHand.get(j);
-							if (hintColor == compare.color) {
-								colorPlay = false;
-							}
-							if (hintNumber == compare.value) {
-								numPlay = false;
-							}
-						}
-					}
-
-					// check for guaranteed play and discard hints we can acquire using the other player's knowledge base
-					// 		NOTE: potentially gives extra information, but still guarantees at least 1 discard or play
-					if (knownBoard.tableau.get(hintColor) >= hintNumber) { // if the card has already been played
-						if (otherHandKB.get(i).color != -1) {
-							if (numDiscard < 1) {numDiscard = 1;} // i.e. we don't want to override larger hint values
-						}
-						if (otherHandKB.get(i).value != -1) {
-							if (colorDiscard < 1) colorDiscard = 1;
-						}
-					}
-					if (otherPlayable[i] && otherHandKB.get(i).value != -1) {
-						colorPlay = true;
-					} else if (otherPlayable[i] && otherHandKB.get(i).value != -1) {
-						numPlay = true;
-					}
-
-					// update max discardable counts and indices
-					if (numDiscard > maxNumDiscard) {
-						maxNumDiscard = numDiscard;
-						maxNumDiscardIdx = i;
-					}
-					if (colorDiscard > maxColorDiscard) {
-						maxColorDiscard = colorDiscard;
-						maxColorDiscardIdx = i;
-					}
-
-					// update single play indices
-					if (numPlay) {
-						numPlayIdx = i;
-					}
-					if (colorPlay) {
-						colorPlayIdx = i;
-					}
-				}
-			}
-
-			// 3) extract any possible discard hint and any possible play hint
-			if (maxNumDiscard > 0 || maxColorDiscard > 0) { // if we did find a hint
-				if (maxNumDiscard > maxColorDiscard) { // pick the largest hint, defaulting to the color hint
-					discardHint = "NUMBERHINT " + maxNumDiscardIdx;
+				if (otherPlayable[i]) {
+					colorPlay = true; // need assumed true start values for the play hint section below (see *)
+					numPlay = true;
 				} else {
-					discardHint = "COLORHINT " + maxColorDiscardIdx;
+					colorPlay = false; // so we don't log incorrect guaranteed plays
+					numPlay = false;
 				}
-			} else {
-				discardHint = null; // indicates that there is no discard hint
-			}
 
-			if (numPlayIdx != -1) {
-				playHint = "NUMBERHINT " + numPlayIdx;
-			} else if (colorPlayIdx != -1) {
-				playHint = "COLORHINT " + colorPlayIdx;
+				// compare values for this card, finding guaranteed hints that cover multiple cards if possible
+				for (int j=0; j<5; j++) {
+					// discard cases:
+					if (j != i && otherDiscardable[i] != DiscardType.CANNOT_DISCARD) { // don't compare it to itself
+						compare = otherHand.get(j);
+						if (colorDiscard != -1 && compare.color == hintColor && (otherDiscardable[j] == DiscardType.DISCARD_BY_COLOR || otherDiscardable[j] == DiscardType.DISCARD_BY_EITHER)) {
+							colorDiscard++; // color of discardable card overlaps with our discardable card
+						} else if (compare.color == hintColor && (otherDiscardable[j] != DiscardType.DISCARD_BY_COLOR && otherDiscardable[j] != DiscardType.DISCARD_BY_EITHER)) { // TODO am I thinking about this right? I think so...
+							colorDiscard = -1; // non-guaranteed hint
+							// i.e. as far as the other player can discern, there are other potentially playable cards of the same color
+						}
+						if (numDiscard != -1 && compare.value == hintNumber && (otherDiscardable[j] == DiscardType.DISCARD_BY_NUMBER || otherDiscardable[j] == DiscardType.DISCARD_BY_EITHER)) {
+							numDiscard++; // number of discardable card overlaps with our discardable card
+						} else if (compare.value == hintNumber && (otherDiscardable[j] != DiscardType.DISCARD_BY_NUMBER && otherDiscardable[j] != DiscardType.DISCARD_BY_EITHER)) {
+							numDiscard = -1; // non-guaranteed hint
+							// i.e. as far as the other player can discern, there are other potentially playable cards of the same number
+						}
+					}
+					// playable cases: check if there is anything unique we can hint about (*)
+					if (j!=i && otherPlayable[i]) {
+						compare = otherHand.get(j);
+						if (hintColor == compare.color) {
+							colorPlay = false;
+						}
+						if (hintNumber == compare.value) {
+							numPlay = false;
+						}
+					}
+				}
+
+				// check for guaranteed play and discard hints we can acquire using the other player's knowledge base
+				// 		NOTE: potentially gives extra information, but still guarantees at least 1 discard or play
+				if (knownBoard.tableau.get(hintColor) >= hintNumber) { // if the card has already been played
+					if (otherHandKB.get(i).color != -1) {
+						if (numDiscard < 1) {numDiscard = 1;} // i.e. we don't want to override larger hint values
+					}
+					if (otherHandKB.get(i).value != -1) {
+						if (colorDiscard < 1) colorDiscard = 1;
+					}
+				}
+				if (otherPlayable[i] && otherHandKB.get(i).value != -1) {
+					colorPlay = true;
+				} else if (otherPlayable[i] && otherHandKB.get(i).value != -1) {
+					numPlay = true;
+				}
+
+				// update max discardable counts and indices
+				if (numDiscard > maxNumDiscard) {
+					maxNumDiscard = numDiscard;
+					maxNumDiscardIdx = i;
+				}
+				if (colorDiscard > maxColorDiscard) {
+					maxColorDiscard = colorDiscard;
+					maxColorDiscardIdx = i;
+				}
+
+				// update single play indices
+				if (numPlay) {
+					numPlayIdx = i;
+				}
+				if (colorPlay) {
+					colorPlayIdx = i;
+				}
 			}
-			// TODO: currently prioritizes number hints and has no preference for other knowledge-base hints (2) vs. single card hints (1),
-			//  could alter/optimize selection ---- knowledge-base hints (type 2) may be more useful...
 		}
-		catch(Exception e) {
-			e.printStackTrace();
+
+		// 3) extract any possible discard hint and any possible play hint
+		if (maxNumDiscard > 0 || maxColorDiscard > 0) { // if we did find a hint
+			if (maxNumDiscard > maxColorDiscard) { // pick the largest hint, defaulting to the color hint
+				discardHint = "NUMBERHINT " + maxNumDiscardIdx;
+			} else {
+				discardHint = "COLORHINT " + maxColorDiscardIdx;
+			}
+		} else {
+			discardHint = null; // indicates that there is no discard hint
 		}
+
+		if (numPlayIdx != -1) {
+			playHint = "NUMBERHINT " + numPlayIdx;
+		} else if (colorPlayIdx != -1) {
+			playHint = "COLORHINT " + colorPlayIdx;
+		}
+		// TODO: currently prioritizes number hints and has no preference for other knowledge-base hints (2) vs. single card hints (1),
+		//  could alter/optimize selection ---- knowledge-base hints (type 2) may be more useful...
 	}
 }
