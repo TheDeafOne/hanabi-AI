@@ -1,7 +1,11 @@
+import java.util.Objects;
+import java.util.Random;
+
 public class HintManager {
     public HintManager() {
 
     }
+
 
     /**
      * This method finds discard and play hints for otherHand, if they exist, and sets class discardHint and playHint variables accordingly
@@ -15,7 +19,7 @@ public class HintManager {
      * 			(2) those derived from the board state AND the other players existing knowledge of their own hand
      * TODO: not sure if this would be a problem, but how do we make sure we aren't giving hints that give no new information?
      */
-    public void findHints(DiscardType[] discardable, Hand otherHand, boolean[] otherPlayable, Hand otherHandKB, int constantBoard) throws Exception {
+    public void findHints(DiscardManager discardManager, Board knownBoard, Hand otherHand, boolean[] otherPlayable, Hand otherHandKB, int constantBoard) throws Exception {
 //        DiscardType[] discardable = new DiscardType[5];
         // each value is DISCARD_BY_EITHER (3), DISCARD_BY_NUMBER (2), DISCARD_BY_COLOR (1), or CANNOT_DISCARD (0)
         // this method uses the class variable otherPlayable
@@ -38,6 +42,11 @@ public class HintManager {
         String discardHint = null;
 
         Card compare; // holds current card being compared to the potential hint card
+
+        DiscardType[] discardable = new DiscardType[5];
+        for (int i = 0; i<5; i++) {
+            discardable[i] = discardManager.isDiscardableOther(i,otherHand,knownBoard,otherHandKB);
+        }
 
         // 2) find max number of discards possible via hints #### find other's playable hints
         for (int i=0; i<5; i++) {
@@ -143,5 +152,55 @@ public class HintManager {
         }
         // TODO: currently prioritizes number hints and has no preference for other knowledge-base hints (2) vs. single card hints (1),
         //  could alter/optimize selection ---- knowledge-base hints (type 2) may be more useful...
+    }
+
+    public String randomHint(Hand otherHand, boolean[] otherPlayable, String prevRandHint, DiscardManager discardManager) throws Exception {
+        int[] colorCounts = {0, 0, 0, 0, 0};
+        for (int i = 0; i < otherHand.size(); i++) {
+            colorCounts[otherHand.get(i).color] += 1;
+        }
+        int[] numberCounts = {0, 0, 0, 0, 0};
+        for (int i = 0; i < otherHand.size(); i++) {
+            numberCounts[otherHand.get(i).value-1] += 1;
+        }
+
+        boolean hintPossible = false;
+        for (int i=0; i<5; i++) {
+            if (numberCounts[i] > 1) {
+                hintPossible = true;
+                if(otherPlayable[i] && !Objects.equals(prevRandHint, "NUMBERHINT " + (i + 1))) {
+                    return "NUMBERHINT " + (i+1);
+                }
+            } else if (colorCounts[i] > 1) {
+                hintPossible = true;
+                if (otherPlayable[i] && !Objects.equals(prevRandHint, "COLORHINT " + i)) {
+                    return "COLORHINT " + i;
+                }
+            }
+        }
+
+
+        Random myRand = new Random();
+        myRand.setSeed(0);
+        if (hintPossible) {
+            while (true) {
+
+                int idx = Math.abs(myRand.nextInt()%5);
+                int isColor = Math.abs(myRand.nextInt()%2);
+
+                if (isColor == 1) {
+                    if (colorCounts[idx] > 1) {
+                        return "COLORHINT " + idx;
+                    }
+                } else {
+                    if (numberCounts[idx] > 1) {
+                        return "NUMBERHINT " + (idx + 1);
+                    }
+                }
+            }
+        }
+        else {
+            return discardManager.discard(Math.abs(myRand.nextInt(5)));
+        }
     }
 }

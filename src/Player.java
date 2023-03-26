@@ -7,7 +7,7 @@ import java.util.*;
  *
  */
 public class Player {
-	private LogicProcessor logicProcessor;
+	private final LogicProcessor logicProcessor;
 	/**
 	 * This default constructor should be the only constructor you supply.
 	 */
@@ -26,7 +26,7 @@ public class Player {
 	 * @param boardState The state of the board after play.
 	 */
 	public void tellPartnerDiscard(Hand startHand, Card discard, int disIndex, Card draw, int drawIndex, Hand finalHand, Board boardState) {
-		logicProcessor.tellPartnerDiscard(startHand,discard,disIndex,draw,drawIndex,finalHand,boardState);
+		logicProcessor.otherDiscard(disIndex,draw,drawIndex,finalHand,boardState);
 	}
 	
 	/**
@@ -35,7 +35,7 @@ public class Player {
 	 * @param boardState The state of the board after play.
 	 */
 	public void tellYourDiscard(Card discard, Board boardState) {
-		logicProcessor.tellYourDiscard(discard,boardState);
+		logicProcessor.selfDiscard(discard,boardState);
 	}
 
 
@@ -51,7 +51,7 @@ public class Player {
 	 * @param boardState The state of the board after play.
 	 */
 	public void tellPartnerPlay(Hand startHand, Card play, int playIndex, Card draw, int drawIndex, Hand finalHand, boolean wasLegalPlay, Board boardState) {
-		logicProcessor.tellPartnerPlay(startHand,play,playIndex,draw,drawIndex,finalHand,wasLegalPlay,boardState);
+		logicProcessor.otherPlay(playIndex,draw,drawIndex,finalHand,boardState);
 	}
 	
 	/**
@@ -61,7 +61,7 @@ public class Player {
 	 * @param boardState The state of the board after play.
 	 */
 	public void tellYourPlay(Card play, boolean wasLegalPlay, Board boardState) {
-		logicProcessor.tellYourPlay(play,wasLegalPlay,boardState);
+		logicProcessor.selfPlay(play,boardState);
 	}
 	
 	/**
@@ -72,7 +72,7 @@ public class Player {
 	 * @param boardState The state of the board after the hint.
 	 */
 	public void tellColorHint(int color, ArrayList<Integer> indices, Hand otherHand, Board boardState) throws Exception {
-		logicProcessor.tellColorHint(color,indices,otherHand,boardState);
+		logicProcessor.colorHint(color,indices,boardState);
 	}
 	
 	/**
@@ -83,7 +83,7 @@ public class Player {
 	 * @param boardState The state of the board after the hint.
 	 */
 	public void tellNumberHint(int number, ArrayList<Integer> indices, Hand otherHand, Board boardState) {
-		logicProcessor.tellNumberHint(number,indices,otherHand,boardState);
+		logicProcessor.numberHint(number,indices,otherHand,boardState);
 	}
 	
 	/**
