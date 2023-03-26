@@ -24,6 +24,7 @@ public class Player {
 	String playHint;
 	String discardHint;
 	int constantBoard;
+	String prevRandHint;
 
 
 	// possible optimization: storing what possible cards could be in our hand (not in board, table, or other's hand)
@@ -48,6 +49,7 @@ public class Player {
 	 * This default constructor should be the only constructor you supply.
 	 */
 	public Player() {
+		prevRandHint = "";
 		selfHand = new Hand(); // Initial Known Hand for Player 1 (current player)
 		otherHand = new Hand(); // Initial Known Hand for Player 2
 		otherHandKB = new Hand(); // What Player 1 knows Player 2 knows about their hand
@@ -216,9 +218,6 @@ public class Player {
 	 *     his cards have that color, or if no hints remain. This command consumes a hint.
 	 */
 	public String ask(int yourHandSize, Hand partnerHand, Board boardState) throws Exception {
-//		int play = 0;
-//		int discard = 0;
-//		int hint = 0;
 		knownBoard = boardState;
 		otherHand = partnerHand;
 
@@ -259,6 +258,7 @@ public class Player {
 		System.out.println(discardHint);
 		System.out.println(playHint);
 		//TODO: possibly consider the board when deciding what hint type to pick
+
 		return hint();
 	}
 
@@ -277,7 +277,10 @@ public class Player {
 	 */
 	public String hint() throws Exception {
 		if (discardHint == null && playHint == null) {
-			return randomHint();
+			String toReturn = randomHint();
+			prevRandHint = toReturn;
+			System.out.println("ended randomHint function, got " + toReturn);
+			return toReturn;
 		}
 		if (discardHint != null) {
 			return discardHint;
@@ -466,6 +469,7 @@ public class Player {
 		int hintColor; // holds potential hint card's color
 		int hintNumber; // holds potential hint card's number
 		playHint = null;
+		discardHint = null;
 
 		Card compare; // holds current card being compared to the potential hint card
 
@@ -473,7 +477,6 @@ public class Player {
 		for (int i = 0; i<5; i++) {
 			discardable[i] = isDiscardableOther(i);
 		}
-
 
 		// 2) find max number of discards possible via hints #### find other's playable hints
 		for (int i=0; i<5; i++) {
@@ -538,6 +541,7 @@ public class Player {
 						if (colorDiscard < 1) colorDiscard = 1;
 					}
 				}
+
 				if (otherPlayable[i] && otherHandKB.get(i).value != -1) {
 					colorPlay = true;
 				} else if (otherPlayable[i] && otherHandKB.get(i).value != -1) {
@@ -566,14 +570,10 @@ public class Player {
 
 
 		// 3) extract any possible discard hint and any possible play hint
-		if (maxNumDiscard > 0 || maxColorDiscard > 0) { // if we did find a hint
-			if (maxNumDiscard > maxColorDiscard) { // pick the largest hint, defaulting to the color hint
-				discardHint = "NUMBERHINT " + otherHand.get(maxNumDiscardIdx).value;
-			} else {
-				discardHint = "COLORHINT " + otherHand.get(maxNumDiscardIdx).color;
-			}
-		} else {
-			discardHint = null; // indicates that there is no discard hint
+		if (maxNumDiscard > 0 && maxNumDiscard > maxColorDiscard) {
+			discardHint = "NUMBERHINT " + otherHand.get(maxNumDiscardIdx).value;
+		} else if (maxColorDiscard > 0 && maxColorDiscard > maxNumDiscard) {
+			discardHint = "COLORHINT " + otherHand.get(maxColorDiscardIdx).color;
 		}
 
 		if (numPlayIdx != -1) {
@@ -586,30 +586,49 @@ public class Player {
 	}
 
 	private String randomHint() throws Exception {
-		// get color hint with maximum coverage
-		int[] colorMap = {0, 0, 0, 0, 0};
+		int[] colorCounts = {0, 0, 0, 0, 0};
 		for (int i = 0; i < otherHand.size(); i++) {
-			colorMap[otherHand.get(i).color] += 1;
+			colorCounts[otherHand.get(i).color] += 1;
 		}
-		int maxColorIndex = 0;
-		for (int i = 0; i < colorMap.length; i++) {
-			maxColorIndex = colorMap[i] > colorMap[maxColorIndex] ? i : maxColorIndex;
-		}
-
-		// get number hint with maximum coverage
-		int[] numberMap = {0, 0, 0, 0, 0};
+		int[] numberCounts = {0, 0, 0, 0, 0};
 		for (int i = 0; i < otherHand.size(); i++) {
-			numberMap[otherHand.get(i).value-1] += 1;
-		}
-		int maxNumberIndex = 0;
-		for (int i = 0; i < numberMap.length; i++) {
-			maxNumberIndex = numberMap[i] > numberMap[maxNumberIndex] ? i : maxNumberIndex;
+			numberCounts[otherHand.get(i).value-1] += 1;
 		}
 
-
-		if (maxNumberIndex > maxColorIndex) {
-			return "NUMBERHINT " + otherHand.get(maxNumberIndex+1).value;
+		boolean hintPossible = false;
+		for (int i=0; i<5; i++) {
+			if (numberCounts[i] > 1) {
+				hintPossible = true;
+				if(otherPlayable[i] && prevRandHint != ("NUMBERHINT " + (i+ 1))) {
+					return "NUMBERHINT " + (i+1);
+				}
+			} else if (colorCounts[i] > 1) {
+				hintPossible = true;
+				if (otherPlayable[i] && prevRandHint != ("COLORHINT " + i)) {
+					return "COLORHINT " + i;
+				}
+			}
 		}
-		return "COLORHINT " + otherHand.get(maxColorIndex).color;
+		Random myRand = new Random();
+		if (hintPossible) {
+			while (true) {
+
+				int idx = Math.abs(myRand.nextInt()%5);
+				int isColor = Math.abs(myRand.nextInt()%2);
+
+				if (isColor == 1) {
+					if (colorCounts[idx] > 1) {
+						return "COLORHINT " + idx;
+					}
+				} else {
+					if (numberCounts[idx] > 1) {
+						return "NUMBERHINT " + (idx + 1);
+					}
+				}
+			}
+		}
+		else {
+			return discard(Math.abs(myRand.nextInt()%5));
+		}
 	}
 }
