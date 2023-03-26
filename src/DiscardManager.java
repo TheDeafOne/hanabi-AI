@@ -17,7 +17,7 @@ public class DiscardManager {
      * @param check The card being checked
      * @return a boolean value telling whether the card can be discarded
      */
-    public DiscardType isDiscardable(Card check, Board knownBoard) {
+    public DiscardType isSelfDiscardable(Card check, Board knownBoard) {
         // both color and value are known
         if (check.color != -1 && check.value != -1) {
             // has card already been played
@@ -33,7 +33,7 @@ public class DiscardManager {
 
 
     private DiscardType isCardWithKnownColorDiscardable(Card check, Board knownBoard) {
-        // if there is already a full stack of 5 for that color
+        /// if there is already a full stack of 5 for that color
         if (knownBoard.tableau.get(check.color) == 5) {
             return DiscardType.DISCARD_BY_COLOR;
         }
@@ -69,7 +69,7 @@ public class DiscardManager {
      * 			DISCARD_BY_NUMBER indicates it is discardable because of its color, and
      * 			DISCARD_BY_EITHER indicates it is discardable because of either its number or its color
      */
-    public DiscardType isDiscardableOther(int idx, Hand otherHand, Board knownBoard, Hand otherHandKB) {
+    public DiscardType isOtherDiscardable(int idx, Hand otherHand, Board knownBoard, Hand otherHandKB) {
         Card check;
         try {
             check = otherHand.get(idx);
@@ -95,10 +95,7 @@ public class DiscardManager {
             // 2) possible number only hints
             boolean gotNumberDiscard = true;
             for(int i = 0; i < 5; i ++){ // checks to see if any stack could possibly take the number on the card (now or later)
-                if (knownBoard.tableau.get(i) < check.value) {
-                    gotNumberDiscard = false;
-                    break;
-                } // not discardable if it's possible
+                if(knownBoard.tableau.get(i) < check.value){ gotNumberDiscard = false;} // not discardable if it's possible
             }
 
             // 3) discardable because already in play - would need to already know both color or number

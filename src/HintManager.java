@@ -19,10 +19,11 @@ public class HintManager {
      * 			(2) those derived from the board state AND the other players existing knowledge of their own hand
      * TODO: not sure if this would be a problem, but how do we make sure we aren't giving hints that give no new information?
      */
-    public void findHints(DiscardManager discardManager, Board knownBoard, Hand otherHand, boolean[] otherPlayable, Hand otherHandKB, int constantBoard) throws Exception {
+    public String[] findHints(DiscardManager discardManager, Board knownBoard, Hand otherHand, boolean[] otherPlayable, Hand otherHandKB, int constantBoard) throws Exception {
 //        DiscardType[] discardable = new DiscardType[5];
         // each value is DISCARD_BY_EITHER (3), DISCARD_BY_NUMBER (2), DISCARD_BY_COLOR (1), or CANNOT_DISCARD (0)
         // this method uses the class variable otherPlayable
+        String[] hints = new String[2];
         int maxNumDiscard = 0; // max possible discardable cards using a number hint
         int maxNumDiscardIdx = -1;
         int maxColorDiscard = 0; // max possible discardable cards using a color hint
@@ -45,7 +46,7 @@ public class HintManager {
 
         DiscardType[] discardable = new DiscardType[5];
         for (int i = 0; i<5; i++) {
-            discardable[i] = discardManager.isDiscardableOther(i,otherHand,knownBoard,otherHandKB);
+            discardable[i] = discardManager.isOtherDiscardable(i,otherHand,knownBoard,otherHandKB);
         }
 
         // 2) find max number of discards possible via hints #### find other's playable hints
@@ -140,16 +141,17 @@ public class HintManager {
 
         // 3) extract any possible discard hint and any possible play hint
         if (maxNumDiscard > 0 && maxNumDiscard > maxColorDiscard) {
-            discardHint = "NUMBERHINT " + otherHand.get(maxNumDiscardIdx).value;
+            hints[0] = "NUMBERHINT " + otherHand.get(maxNumDiscardIdx).value;
         } else if (maxColorDiscard > 0 && maxColorDiscard > maxNumDiscard) {
-            discardHint = "COLORHINT " + otherHand.get(maxColorDiscardIdx).color;
+            hints[0] = "COLORHINT " + otherHand.get(maxColorDiscardIdx).color;
         }
 
         if (numPlayIdx != -1) {
-            playHint = "NUMBERHINT " + otherHand.get(numPlayIdx).value;
+            hints[1] = "NUMBERHINT " + otherHand.get(numPlayIdx).value;
         } else if (colorPlayIdx != -1) {
-            playHint = "COLORHINT " + otherHand.get(colorPlayIdx).color;
+            hints[1] = "COLORHINT " + otherHand.get(colorPlayIdx).color;
         }
+        return hints;
         // TODO: currently prioritizes number hints and has no preference for other knowledge-base hints (2) vs. single card hints (1),
         //  could alter/optimize selection ---- knowledge-base hints (type 2) may be more useful...
     }
