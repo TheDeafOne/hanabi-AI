@@ -1,0 +1,6 @@
+public enum DiscardType {
+    CANNOT_DISCARD,
+    DISCARD_BY_COLOR,
+    DISCARD_BY_NUMBER,
+    DISCARD_BY_EITHER
+}
