@@ -17,7 +17,7 @@ public class Player {
 	DiscardType[] selfDiscardable; // what we can guarantee from our own hand is discardable based on hints
 		// after each move, check whether the card(s) are guaranteed discardable
 	boolean[] selfPlayable; // what we can guarantee from our own hand is playable based on hints
-comme	// after each move, check whether there are guarenteed plays
+	// after each move, check whether there are guarenteed plays
 	// Special case: if we get a single card hint, and it's not discardable, assume it is a guaranteed play
 	DiscardType[] otherDiscardable; // what we can guarentee the other player can discard // TODO: remove, we don't care about this, we only care about discardHint
 	boolean[] otherPlayable; // what we can guarentee the other player can play
@@ -390,6 +390,7 @@ comme	// after each move, check whether there are guarenteed plays
 
 		int hintColor; // holds potential hint card's color
 		int hintNumber; // holds potential hint card's number
+		playHint = null;
 
 		Card compare; // holds current card being compared to the potential hint card
 
