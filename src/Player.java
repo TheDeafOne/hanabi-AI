@@ -520,7 +520,7 @@ public class Player {
 						if (hintColor == compare.color) {
 							colorPlay = false;
 						}
-						if (hintNumber == compare.value && constantBoard != -1) {
+						if (hintNumber == compare.value && constantBoard == -1) {
 							numPlay = false;
 						}
 					}
