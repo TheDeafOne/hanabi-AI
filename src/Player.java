@@ -26,6 +26,7 @@ public class Player {
 	// TODO: should be updated each time we update otherHand and each time we update the board, not necessarily in the ask function
 	String playHint;
 	String discardHint;
+	int constantBoard;
 
 
 	// possible optimization: storing what possible cards could be in our hand (not in board, table, or other's hand)
@@ -224,6 +225,8 @@ public class Player {
 		knownBoard = boardState;
 		otherHand = partnerHand;
 
+		checkConstantBoard(); // check if the board is all one number
+
 		// manage discardable cards for player hand
 		for (int i = 0; i < yourHandSize; i++) {
 			selfDiscardable[i] = isDiscardable(selfHand.get(i)); // sets all values in selfDiscardable to true or false
@@ -289,6 +292,24 @@ public class Player {
 	 */
 	public String discard(int index) {
 		return String.format("DISCARD %d %d", index, index);
+	}
+
+	public void checkConstantBoard() throws Exception {
+		int tableauScore = knownBoard.tableau.get(0);
+		for (int i=1; i<5; i++) {
+			if (knownBoard.tableau.get(i) != tableauScore) {
+				tableauScore = -1;
+				break;
+			}
+		}
+		constantBoard = tableauScore;
+		if (constantBoard != -1) {
+			for (int i=0; i<5; i++) {
+				if (selfHand.get(i).value == constantBoard + 1) {
+					selfPlayable[i] = true;
+				}
+			}
+		}
 	}
 
 
@@ -504,7 +525,7 @@ public class Player {
 						if (hintColor == compare.color) {
 							colorPlay = false;
 						}
-						if (hintNumber == compare.value) {
+						if (hintNumber == compare.value && constantBoard != -1) {
 							numPlay = false;
 						}
 					}
