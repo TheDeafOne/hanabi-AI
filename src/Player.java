@@ -220,6 +220,7 @@ public class Player {
 //		int discard = 0;
 //		int hint = 0;
 		knownBoard = boardState;
+		otherHand = partnerHand;
 
 		// manage discardable cards for player hand
 		for (int i = 0; i < yourHandSize; i++) {
@@ -465,13 +466,13 @@ public class Player {
 
 		// 2) find max number of discards possible via hints #### find other's playable hints
 		for (int i=0; i<5; i++) {
-			if (discardable[i] != CANNOT_DISCARD || otherPlayable[i]) {
+			if (discardable[i] != DiscardType.CANNOT_DISCARD || otherPlayable[i]) {
 				hintColor = otherHand.get(i).color;
 				hintNumber = otherHand.get(i).value;
-				if (discardable[i] == DISCARD_BY_COLOR) {
+				if (discardable[i] == DiscardType.DISCARD_BY_COLOR) {
 					colorDiscard = 0;
 					numDiscard = -1;
-				} else if (discardable[i] == DISCARD_BY_NUMBER){
+				} else if (discardable[i] == DiscardType.DISCARD_BY_NUMBER){
 					colorDiscard = -1;
 					numDiscard = 0;
 				} else {
@@ -490,17 +491,17 @@ public class Player {
 				// compare values for this card, finding guaranteed hints that cover multiple cards if possible
 				for (int j=0; j<5; j++) {
 					// discard cases:
-					if (j != i && discardable[i] != CANNOT_DISCARD) { // don't compare it to itself
+					if (j != i && discardable[i] != DiscardType.CANNOT_DISCARD) { // don't compare it to itself
 						compare = otherHand.get(j);
-						if (colorDiscard != -1 && compare.color == hintColor && (discardable[j] == DISCARD_BY_COLOR || discardable[j] == DISCARD_BY_EITHER)) {
+						if (colorDiscard != -1 && compare.color == hintColor && (discardable[j] == DiscardType.DISCARD_BY_COLOR || discardable[j] == DiscardType.DISCARD_BY_EITHER)) {
 							colorDiscard++; // color of discardable card overlaps with our discardable card
-						} else if (compare.color == hintColor && (discardable[j] != DISCARD_BY_COLOR && discardable[j] != DISCARD_BY_EITHER)) { // TODO am I thinking about this right? I think so...
+						} else if (compare.color == hintColor && (discardable[j] != DiscardType.DISCARD_BY_COLOR && discardable[j] != DiscardType.DISCARD_BY_EITHER)) { // TODO am I thinking about this right? I think so...
 							colorDiscard = -1; // non-guaranteed hint
 							// i.e. as far as the other player can discern, there are other potentially playable cards of the same color
 						}
-						if (numDiscard != -1 && compare.value == hintNumber && (discardable[j] == DISCARD_BY_NUMBER || discardable[j] == DISCARD_BY_EITHER)) {
+						if (numDiscard != -1 && compare.value == hintNumber && (discardable[j] == DiscardType.DISCARD_BY_NUMBER || discardable[j] == DiscardType.DISCARD_BY_EITHER)) {
 							numDiscard++; // number of discardable card overlaps with our discardable card
-						} else if (compare.value == hintNumber && (discardable[j] != DISCARD_BY_NUMBER && discardable[j] != DISCARD_BY_EITHER)) {
+						} else if (compare.value == hintNumber && (discardable[j] != DiscardType.DISCARD_BY_NUMBER && discardable[j] != DiscardType.DISCARD_BY_EITHER)) {
 							numDiscard = -1; // non-guaranteed hint
 							// i.e. as far as the other player can discern, there are other potentially playable cards of the same number
 						}
@@ -518,7 +519,7 @@ public class Player {
 				}
 
 				// check for guaranteed play and discard hints we can acquire using the other player's knowledge base
-				if (discardable[i] != CANNOT_DISCARD) { // if the card has already been played
+				if (discardable[i] != DiscardType.CANNOT_DISCARD) { // if the card has already been played
 					if (otherHandKB.get(i).color != -1) {
 						if (numDiscard < 1) {numDiscard = 1;} // i.e. we don't want to override larger hint values
 					}
