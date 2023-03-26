@@ -7,12 +7,49 @@ import java.util.*;
  *
  */
 public class Player {
-	private final LogicProcessor logicProcessor;
+	Board knownBoard;
+	Hand selfHand;
+	Hand otherHand;
+	Hand otherHandKB;
+
+	DiscardType[] selfDiscardable;
+	DiscardType[] otherDiscardable;
+	boolean[] selfPlayable;
+	boolean[] otherPlayable;
+
+	String playHint;
+	String discardHint;
+	int constantBoard;
+	String prevRandHint;
+
+	HintManager hintManager;
+	DiscardManager discardManager;
 	/**
 	 * This default constructor should be the only constructor you supply.
 	 */
 	public Player() {
-		logicProcessor = new LogicProcessor();
+		prevRandHint = "";
+		selfHand = new Hand();
+		otherHand = new Hand();
+		otherHandKB = new Hand();
+
+		selfDiscardable = new DiscardType[5]; //An empty array of 5 variables telling which cards can be discarded
+		selfPlayable = new boolean[5]; // An empty array of 5 variables telling which cards can be played
+		otherDiscardable = new DiscardType[5]; // An empty array of 5 variables telling which of the other player's cards can be discarded
+		otherPlayable = new boolean[5]; // An empty array of 5 variables telling which of the other player's cards can be played
+
+		hintManager = new HintManager();
+		discardManager = new DiscardManager();
+		// Initialize what we know about our hand and what the other player knows about theirs
+		try {
+			for (int i = 0; i < 5; i++) {
+				otherHandKB.add(i, new Card(-1,-1));
+				selfHand.add(i, new Card(-1,-1));
+			}
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -26,7 +63,19 @@ public class Player {
 	 * @param boardState The state of the board after play.
 	 */
 	public void tellPartnerDiscard(Hand startHand, Card discard, int disIndex, Card draw, int drawIndex, Hand finalHand, Board boardState) {
-		logicProcessor.otherDiscard(disIndex,draw,drawIndex,finalHand,boardState);
+		removeCardFromPlayerHand(discard, boardState, otherHandKB);
+		try {
+			// if he draws a card and the deck isn't empty
+			if (draw != null){
+				// adds a null card in the space where he added it in his hand, offsetting any other cards he may know at that index
+				otherHandKB.add(drawIndex, new Card(-1,-1));
+			}
+		}  catch (Exception e){
+			e.printStackTrace();
+		}
+		// what player knows about partners hand
+		otherHand = finalHand;
+		knownBoard = boardState;
 	}
 	
 	/**
@@ -35,9 +84,22 @@ public class Player {
 	 * @param boardState The state of the board after play.
 	 */
 	public void tellYourDiscard(Card discard, Board boardState) {
-		logicProcessor.selfDiscard(discard,boardState);
+		removeCardFromPlayerHand(discard, boardState, selfHand);
+		knownBoard = boardState;
 	}
-
+	private void removeCardFromPlayerHand(Card discard, Board boardState, Hand hand) {
+		try {
+			// finds where the discarded card was at in your hand and then removes that index from your known hand
+			for (int i = 0; i < hand.size(); i++){
+				if(hand.get(i) == discard){
+					hand.remove(i);
+					break;
+				}
+			}
+		}  catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
 
 	/**
 	 * This method runs whenever your partner played a card
@@ -51,7 +113,23 @@ public class Player {
 	 * @param boardState The state of the board after play.
 	 */
 	public void tellPartnerPlay(Hand startHand, Card play, int playIndex, Card draw, int drawIndex, Hand finalHand, boolean wasLegalPlay, Board boardState) {
-		logicProcessor.otherPlay(playIndex,draw,drawIndex,finalHand,boardState);
+		try {
+			//Removes the card that the player discarded from his own knowledge base (whatever he knew about it)
+			otherHandKB.remove(playIndex);
+
+			//if he draws a card and the deck isn't empty - otherwise does nothing
+			if(draw != null){
+				//adds a null card in the space where he added it in his hand, offsetting any other cards he may know at that index
+				otherHandKB.add(drawIndex, new Card(-1,-1));
+			}
+		}
+		catch (Exception e){
+			e.printStackTrace();
+		}
+		// what player knows about partners hand
+		otherHand = finalHand;
+
+		knownBoard = boardState;
 	}
 	
 	/**
@@ -61,7 +139,8 @@ public class Player {
 	 * @param boardState The state of the board after play.
 	 */
 	public void tellYourPlay(Card play, boolean wasLegalPlay, Board boardState) {
-		logicProcessor.selfPlay(play,boardState);
+		removeCardFromPlayerHand(play, boardState, selfHand);
+		knownBoard = boardState;
 	}
 	
 	/**
@@ -72,7 +151,17 @@ public class Player {
 	 * @param boardState The state of the board after the hint.
 	 */
 	public void tellColorHint(int color, ArrayList<Integer> indices, Hand otherHand, Board boardState) throws Exception {
-		logicProcessor.colorHint(color,indices,boardState);
+		for (Integer index : indices) {
+			Card oldCard = selfHand.get(index);
+			Card newCard = new Card(color, oldCard.value);
+			selfHand.remove(index);
+			selfHand.add(index, newCard);
+		}
+
+		knownBoard = boardState;
+		if (indices.size() == 1) {
+			selfPlayable[indices.get(0)] = true;
+		}
 	}
 	
 	/**
@@ -83,7 +172,22 @@ public class Player {
 	 * @param boardState The state of the board after the hint.
 	 */
 	public void tellNumberHint(int number, ArrayList<Integer> indices, Hand otherHand, Board boardState) {
-		logicProcessor.numberHint(number,indices,otherHand,boardState);
+		try {
+			for (Integer index : indices) {
+				Card oldCard = selfHand.get(index);
+				Card newCard = new Card(oldCard.color, number);
+				selfHand.remove(index);
+				selfHand.add(index, newCard);
+			}
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		this.otherHand = otherHand;
+		knownBoard = boardState;
+
+		if (indices.size() == 1) {
+			selfPlayable[indices.get(0)] = true;
+		}
 	}
 	
 	/**
@@ -108,27 +212,122 @@ public class Player {
 	 */
 	public String ask(int yourHandSize, Hand partnerHand, Board boardState) throws Exception {
 		// update game state
-		logicProcessor.initializeTurn(boardState, partnerHand);
+		initializeTurn(boardState, partnerHand);
 
 		// if play can be made, do so
-		String playAction = logicProcessor.canPlay();
+		String playAction = canPlay();
 		if (!playAction.equals("CANNOT_PLAY")) {
 			return playAction;
 		}
 
 		// if discard can be made, do so
-		String discardAction = logicProcessor.canDiscard();
+		String discardAction = canDiscard();
 		if (!discardAction.equals("CANNOT_DISCARD")) {
 			return discardAction;
 		}
 
 		// if hint can be made, do so
-		String hintAction = logicProcessor.canHint();
-		if (!logicProcessor.canHint().equals("CANNOT_HINT")) {
+		String hintAction = canHint();
+		if (!canHint().equals("CANNOT_HINT")) {
 			return hintAction;
 		}
 
 		// none of the three actions can be done well, so discard a random card
-		return logicProcessor.discardRandom();
+		return discardRandom();
+	}
+
+	public void initializeTurn(Board boardState, Hand partnerHand) throws Exception {
+		knownBoard = boardState;
+		otherHand = partnerHand;
+		checkConstantBoard();
+		loadSelfDiscardableCards();
+		loadOtherDiscardableCards();
+		loadOtherPlayableCards();
+	}
+
+
+	/**
+	 * Method for causing the player to hint a card, choosing the best card available based on the knowledge base
+	 * @return String representation of hint move
+	 */
+	public String canHint() throws Exception {
+		if (knownBoard.numHints == 0) {
+			return "CANNOT_HINT";
+		}
+		hintManager.findHints(discardManager, knownBoard, otherHand, otherPlayable, otherHandKB, constantBoard);
+		if (discardHint == null && playHint == null) {
+			String toReturn = hintManager.randomHint(otherHand,otherPlayable,prevRandHint, discardManager);
+			prevRandHint = toReturn;
+			return toReturn;
+		}
+		if (playHint == null) {
+			return discardHint;
+		}
+		return playHint;
+	}
+
+
+	public String canPlay() {
+		for (int i = 0; i < selfPlayable.length; i++) {
+			if (selfPlayable[i]) {
+				selfPlayable[i] = false;
+				return String.format("PLAY %d %d",i,i);
+			}
+		}
+		return "CANNOT_PLAY";
+	}
+
+	public String canDiscard() {
+		for (int i = 0; i < selfDiscardable.length; i++) {
+			if (selfDiscardable[i] != DiscardType.CANNOT_DISCARD) {
+				return discardManager.discard(i);
+			}
+		}
+		return "CANNOT_DISCARD";
+	}
+
+
+
+	public void loadSelfDiscardableCards() throws Exception {
+		// manage discardable cards for player hand
+		for (int i = 0; i < selfHand.size(); i++) {
+			selfDiscardable[i] = discardManager.isDiscardable(selfHand.get(i),knownBoard); // sets all values in selfDiscardable to true or false
+		}
+	}
+
+	public void loadOtherDiscardableCards() throws Exception {
+		// manage playable and discardable cards for partner hand
+		for (int i = 0; i < otherHand.size(); i++) {
+			otherDiscardable[i] = discardManager.isDiscardable(otherHand.get(i),knownBoard); // sets all values in otherDiscardable to true or false
+		}
+	}
+
+	public void loadOtherPlayableCards() throws Exception {
+		for (int i = 0; i < otherHand.size(); i++) {
+			otherPlayable[i] = knownBoard.isLegalPlay(otherHand.get(i));// sets all values in otherPlayable to true or false
+		}
+	}
+
+	public String discardRandom() {
+		//TODO: make logic better for discarding random card
+		return discardManager.discard(0);
+	}
+
+	public void checkConstantBoard() throws Exception {
+		int tableauScore = knownBoard.tableau.get(0);
+		for (int i=1; i<5; i++) {
+			if (knownBoard.tableau.get(i) != tableauScore) {
+				tableauScore = -1;
+				break;
+			}
+		}
+		constantBoard = tableauScore;
+		if (constantBoard != -1) {
+			for (int i=0; i<5; i++) {
+				if (selfHand.get(i).value == constantBoard + 1) {
+					selfPlayable[i] = true;
+				}
+			}
+		}
 	}
 }
