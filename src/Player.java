@@ -335,57 +335,6 @@ public class Player {
 		knownBoard = boardState;
 	}
 
-//	/**
-//	 * This method tells whether a card in the other players hand is discardable based on the state of the board.
-//	 * @param idx The index of card being checked from otherHand
-//	 * @return an int value telling whether the card can be discarded, where
-//	 * 	 		CANNOT_DISCARD indicates it is not discardable,
-//	 * 	 		DISCARD_BY_COLOR indicates it is discardable because of its number,
-//	 * 			DISCARD_BY_NUMBER indicates it is discardable because of its color, and
-//	 * 			DISCARD_BY_EITHER indicates it is discardable because of either its number or its color
-//	 */
-//	public DiscardType isDiscardableOther(int idx) throws Exception {
-//		Card check;
-//		check = otherHand.get(idx);
-//		// 1) possible color only hints
-//		// 1a) that color stack is full
-//		if (knownBoard.tableau.get(check.color) == 5){
-//			return DiscardType.DISCARD_BY_COLOR;
-//			// 1b) the next value on the color stack have all been discarded
-//		} else {
-//			int nextVal = knownBoard.tableau.get(check.color)+1;
-//			int numcol = 0;
-//			for(Card c1 : knownBoard.discards){ // count how many of that nextVal in that color are already discarded
-//				if((c1.value == nextVal)&&(c1.color == check.color)){numcol++;}
-//			}
-//			// check if all the next cards have been discarded, where there are three 1s, two 2s 3s and 4s, and one 5
-//			if ((nextVal == 1 && numcol == 3) || (nextVal > 1 && nextVal < 5 && numcol == 2) || (nextVal == 5 && numcol == 1)) {
-//				return DiscardType.DISCARD_BY_COLOR;
-//			}
-//			// TODO: potential runtime time optimization - keeping a data structure of dead colors
-//		}
-//
-//		// 2) possible number only hints
-//		boolean gotNumberDiscard = true;
-//		for(int i = 0; i < 5; i ++){ // checks to see if any stack could possibly take the number on the card (now or later)
-//			if (knownBoard.tableau.get(i) < check.value) {
-//				gotNumberDiscard = false;
-//				break;
-//			} // not discardable if it's possible
-//		}
-//
-//		// 3) discardable because already in play - would need to already know both color or number
-//		// 		(there may be some overlap between this and 1 and 2, which is okay)
-//		if (knownBoard.tableau.get(check.color) >= check.value) { // if the card has already been played
-//			if (otherHandKB.get(idx).value != -1) {
-//				return DiscardType.DISCARD_BY_NUMBER;
-//			}
-//		}
-//
-//		// 4) return appropriate value
-//		return DiscardType.CANNOT_DISCARD;
-//	}
-
 	/**
 	 * This method finds discard and play hints for otherHand, if they exist, and sets class discardHint and playHint variables accordingly
 	 * 		There are two types of guaranteed discard hints:
