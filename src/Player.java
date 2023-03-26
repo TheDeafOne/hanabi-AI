@@ -1,7 +1,4 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 
 
 /**
@@ -237,7 +234,6 @@ public class Player {
 			otherDiscardable[i] = isDiscardable(otherHand.get(i)); // sets all values in otherDiscardable to true or false
 			otherPlayable[i] = knownBoard.isLegalPlay(otherHand.get(i));// sets all values in otherPlayable to true or false
 		}
-
 		// if any cards are playable, play them
 		for (int i = 0; i < selfPlayable.length; i++) {
 			if (selfPlayable[i]) {
@@ -587,6 +583,7 @@ public class Player {
 	}
 
 	private String randomHint() throws Exception {
+		// get color hint with maximum coverage
 		int[] colorMap = {0, 0, 0, 0, 0};
 		for (int i = 0; i < otherHand.size(); i++) {
 			colorMap[otherHand.get(i).color] += 1;
@@ -596,6 +593,7 @@ public class Player {
 			maxColorIndex = colorMap[i] > colorMap[maxColorIndex] ? i : maxColorIndex;
 		}
 
+		// get number hint with maximum coverage
 		int[] numberMap = {0, 0, 0, 0, 0};
 		for (int i = 0; i < otherHand.size(); i++) {
 			numberMap[otherHand.get(i).value-1] += 1;
@@ -605,8 +603,9 @@ public class Player {
 			maxNumberIndex = numberMap[i] > numberMap[maxNumberIndex] ? i : maxNumberIndex;
 		}
 
+
 		if (maxNumberIndex > maxColorIndex) {
-			return "NUMBERHINT " + otherHand.get(maxNumberIndex).value;
+			return "NUMBERHINT " + otherHand.get(maxNumberIndex+1).value;
 		}
 		return "COLORHINT " + otherHand.get(maxColorIndex).color;
 	}
