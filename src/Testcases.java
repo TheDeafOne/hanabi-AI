@@ -11,12 +11,16 @@ public class Testcases {
     private int otherPlayer;
 
     public static void main(String[] args) throws Exception {
-        isDiscardableOther();
+        giveDiscardableHint();
+    }
+
+    public static boolean givePlayableHint() {
+
+        return true;
     }
 
 
-
-    public static boolean isDiscardableOther() throws Exception {
+    public static boolean giveDiscardableHint() throws Exception {
         Board boardState;
         ArrayList<Player> players;
         ArrayList<Hand> hands;
