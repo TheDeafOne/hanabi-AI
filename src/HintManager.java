@@ -189,7 +189,7 @@ public class HintManager {
 
 
         Random myRand = new Random();
-        myRand.setSeed(0);
+//        myRand.setSeed(0);
         if (hintPossible) {
             while (true) {
 
