@@ -7,6 +7,7 @@ public class Hanabi {
 	private ArrayList<Player> players;
 	private ArrayList<Hand> hands;
 	private ArrayList<Card> deck;
+	public int seed;
 
 	private int currentPlayer;
 	private int otherPlayer;
@@ -118,7 +119,8 @@ public class Hanabi {
 	 */
 	public void shuffle() {
 		Random rand = new Random();
-		rand.setSeed(0);
+		seed = 2102534248; //rand.nextInt();
+		rand.setSeed(2102534248);
 		for (int i = deck.size() - 1; i >= 1; i--) {
 			int j = rand.nextInt(i + 1);
 			Card temp = deck.get(j);

@@ -209,10 +209,10 @@ public class Player {
 	 *     his cards have that color, or if no hints remain. This command consumes a hint.
 	 */
 	public String ask(int yourHandSize, Hand partnerHand, Board boardState) throws Exception {
+		System.out.println("HERE");
+		System.out.println(selfHand);
 		// update game state
-		System.out.println(Arrays.toString(selfPlayable));
 		initializeTurn(boardState, partnerHand);
-		System.out.println(Arrays.toString(selfPlayable));
 
 		// if play can be made, do so
 		String playAction = canPlay();
@@ -270,19 +270,23 @@ public class Player {
 	}
 
 
-	public String canPlay() {
+	public String canPlay() throws Exception {
 		for (int i = 0; i < selfPlayable.length; i++) {
 			if (selfPlayable[i]) {
 				selfPlayable[i] = false;
+				selfHand.remove(i);
+				selfHand.add(i, new Card(-1,-1));
 				return String.format("PLAY %d %d",i,i);
 			}
 		}
 		return "CANNOT_PLAY";
 	}
 
-	public String canDiscard() {
+	public String canDiscard() throws Exception {
 		for (int i = 0; i < selfDiscardable.length; i++) {
 			if (selfDiscardable[i] != DiscardType.CANNOT_DISCARD) {
+				selfHand.remove(i);
+				selfHand.add(i, new Card(-1,-1));
 				return discardManager.discard(i);
 			}
 		}
@@ -314,9 +318,8 @@ public class Player {
 	public void loadSelfPlayableCards() throws Exception {
 		for (int i = 0; i < selfHand.size(); i++) {
 			Card card = selfHand.get(i);
-			System.out.println("HERE: " + card.value + " " + card.color);
 			if (card.value != -1 && card.color != -1) {
-				selfPlayable[i] = knownBoard.isLegalPlay(card);
+				selfPlayable[i] = selfPlayable[i] || knownBoard.isLegalPlay(card);
 			}
 		}
 	}
