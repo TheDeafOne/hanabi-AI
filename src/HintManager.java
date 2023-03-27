@@ -19,7 +19,7 @@ public class HintManager {
      * 			(2) those derived from the board state AND the other players existing knowledge of their own hand
      * TODO: not sure if this would be a problem, but how do we make sure we aren't giving hints that give no new information?
      */
-    public String[] findHints(DiscardManager discardManager, Board knownBoard, Hand otherHand, boolean[] otherPlayable, Hand otherHandKB, int constantBoard) throws Exception {
+    public String[] findHints(Hand otherHand, boolean[] otherPlayable, Hand otherHandKB, int constantBoard, DiscardType[] discardable) throws Exception {
 //        DiscardType[] discardable = new DiscardType[5];
         // each value is DISCARD_BY_EITHER (3), DISCARD_BY_NUMBER (2), DISCARD_BY_COLOR (1), or CANNOT_DISCARD (0)
         // this method uses the class variable otherPlayable
@@ -44,10 +44,10 @@ public class HintManager {
 
         Card compare; // holds current card being compared to the potential hint card
 
-        DiscardType[] discardable = new DiscardType[5];
-        for (int i = 0; i<5; i++) {
-            discardable[i] = discardManager.isOtherDiscardable(i,otherHand,knownBoard,otherHandKB);
-        }
+//        DiscardType[] discardable = new DiscardType[5];
+//        for (int i = 0; i<5; i++) {
+//            discardable[i] = discardManager.isOtherDiscardable(i,otherHand,knownBoard,otherHandKB);
+//        }
 
         // 2) find max number of discards possible via hints #### find other's playable hints
         for (int i=0; i<5; i++) {

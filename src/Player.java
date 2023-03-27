@@ -218,15 +218,15 @@ public class Player {
 
 
 		// update game state
-		System.out.println("INFO:");
-		System.out.println(Arrays.toString(selfPlayable));
 		initializeTurn(boardState, partnerHand);
-		System.out.println(Arrays.toString(selfPlayable));
-		System.out.println("SELF KNOWLEDGE BASE");
-		System.out.println(selfHand);
-		System.out.println("OTHER KNOWLEDGE BASE");
-		System.out.println(otherHandKB);
-		System.out.println("\nACTION:");
+//		System.out.println("INFO:");
+//		System.out.println(Arrays.toString(selfPlayable));
+//		System.out.println(Arrays.toString(selfPlayable));
+//		System.out.println("SELF KNOWLEDGE BASE");
+//		System.out.println(selfHand);
+//		System.out.println("OTHER KNOWLEDGE BASE");
+//		System.out.println(otherHandKB);
+//		System.out.println("\nACTION:");
 
 
 		// if play can be made, do so
@@ -273,7 +273,7 @@ public class Player {
 		if (knownBoard.numHints == 0) {
 			return "CANNOT_HINT";
 		}
-		String[] hints = hintManager.findHints(discardManager, knownBoard, otherHand, otherPlayable, otherHandKB, constantBoard);
+		String[] hints = hintManager.findHints(otherHand, otherPlayable, otherHandKB, constantBoard, otherDiscardable);
 		discardHint = hints[0];
 		playHint = hints[1];
 
