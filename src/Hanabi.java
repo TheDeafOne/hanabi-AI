@@ -119,7 +119,7 @@ public class Hanabi {
 	 */
 	public void shuffle() {
 		Random rand = new Random();
-		seed = rand.nextInt();
+		seed = 2084639803; // rand.nextInt();
 		rand.setSeed(seed);
 		for (int i = deck.size() - 1; i >= 1; i--) {
 			int j = rand.nextInt(i + 1);
