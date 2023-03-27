@@ -17,6 +17,8 @@ public class Player {
 	boolean[] selfPlayable;
 	boolean[] otherPlayable;
 
+	int[] cardAges;
+
 	String playHint;
 	String discardHint;
 	int constantBoard;
@@ -37,6 +39,7 @@ public class Player {
 		selfPlayable = new boolean[5]; // An empty array of 5 variables telling which cards can be played
 		otherDiscardable = new DiscardType[5]; // An empty array of 5 variables telling which of the other player's cards can be discarded
 		otherPlayable = new boolean[5]; // An empty array of 5 variables telling which of the other player's cards can be played
+		cardAges = new int[5];
 
 		hintManager = new HintManager();
 		discardManager = new DiscardManager();
@@ -45,6 +48,7 @@ public class Player {
 			for (int i = 0; i < 5; i++) {
 				otherHandKB.add(i, new Card(-1,-1));
 				selfHand.add(i, new Card(-1,-1));
+				cardAges[i] = 0;
 			}
 		}
 		catch(Exception e){
@@ -156,6 +160,7 @@ public class Player {
 		for (Integer index : indices) {
 			Card oldCard = selfHand.get(index);
 			Card newCard = new Card(color, oldCard.value);
+			//TODO: maybe reset age here
 			selfHand.remove(index);
 			selfHand.add(index, newCard);
 		}
@@ -213,15 +218,15 @@ public class Player {
 
 
 		// update game state
+		System.out.println("INFO:");
+		System.out.println(Arrays.toString(selfPlayable));
 		initializeTurn(boardState, partnerHand);
-//		System.out.println("\n");
-//		System.out.println(Arrays.toString(selfPlayable));
-//		System.out.println(Arrays.toString(selfPlayable));
-//		System.out.println("SELF KNOWLEDGE BASE");
-//		System.out.println(selfHand);
-//		System.out.println("OTHER KNOWLEDGE BASE");
-//		System.out.println(otherHandKB);
-//		System.out.println("\n");
+		System.out.println(Arrays.toString(selfPlayable));
+		System.out.println("SELF KNOWLEDGE BASE");
+		System.out.println(selfHand);
+		System.out.println("OTHER KNOWLEDGE BASE");
+		System.out.println(otherHandKB);
+		System.out.println("\nACTION:");
 
 
 		// if play can be made, do so
@@ -247,6 +252,9 @@ public class Player {
 	}
 
 	public void initializeTurn(Board boardState, Hand partnerHand) throws Exception {
+		for (int i = 0; i < selfHand.size(); i++) {
+			cardAges[i]++;
+		}
 		knownBoard = boardState;
 		otherHand = partnerHand;
 		checkConstantBoard();
@@ -299,7 +307,7 @@ public class Player {
 			}
 
 			if (hintStrings[0].equals("COLORHINT")) {
-				if (card.value == Integer.parseInt(hintStrings[1])) {
+				if (card.color == Integer.parseInt(hintStrings[1])) {
 					otherHandKB.remove(i);
 					otherHandKB.add(i,new Card(card.color,oldCard.value));
 				}
@@ -312,6 +320,7 @@ public class Player {
 		for (int i = 0; i < selfPlayable.length; i++) {
 			if (selfPlayable[i]) {
 				selfPlayable[i] = false;
+				cardAges[i] = 0;
 				selfHand.remove(i);
 				selfHand.add(i, new Card(-1,-1));
 				return String.format("PLAY %d %d",i,i);
@@ -324,6 +333,7 @@ public class Player {
 		for (int i = 0; i < selfDiscardable.length; i++) {
 			if (selfDiscardable[i] != DiscardType.CANNOT_DISCARD) {
 				selfHand.remove(i);
+				cardAges[i] = 0;
 				selfHand.add(i, new Card(-1,-1));
 				return discardManager.discard(i);
 			}
@@ -363,10 +373,16 @@ public class Player {
 	}
 
 	public String discardRandom() throws Exception {
-		//TODO: make logic better for discarding random card
-		selfHand.remove(0);
-		selfHand.add(0, new Card(-1,-1));
-		return discardManager.discard(0);
+		int maxAgeIndex = 0;
+		for (int i = 0; i < selfHand.size(); i++) {
+			if (cardAges[i] > cardAges[maxAgeIndex]) {
+				maxAgeIndex = i;
+			}
+		}
+
+		selfHand.remove(maxAgeIndex);
+		selfHand.add(maxAgeIndex, new Card(-1,-1));
+		return discardManager.discard(maxAgeIndex);
 	}
 
 	public void checkConstantBoard() throws Exception {

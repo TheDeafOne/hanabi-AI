@@ -37,7 +37,7 @@ public class Board {
 		result += "  Tableau: Red " + tableau.get(Colors.RED) + ", Yellow " + tableau.get(Colors.YELLOW) +
 				", Blue " + tableau.get(Colors.BLUE) + ", Green " + tableau.get(Colors.GREEN) +
 				", White " + tableau.get(Colors.WHITE) + "\n";
-		result += "  Discards: " + discards.toString();
+//		result += "  Discards: " + discards.toString();
 		return result;
 	}
 	
