@@ -66,6 +66,7 @@ public class Player {
 		removeCardFromPlayerHand(discard, otherHandKB);
 		try {
 			// if he draws a card and the deck isn't empty
+			otherHandKB.remove(disIndex);
 			if (draw != null){
 				// adds a null card in the space where he added it in his hand, offsetting any other cards he may know at that index
 				otherHandKB.add(drawIndex, new Card(-1,-1));
@@ -209,10 +210,19 @@ public class Player {
 	 *     his cards have that color, or if no hints remain. This command consumes a hint.
 	 */
 	public String ask(int yourHandSize, Hand partnerHand, Board boardState) throws Exception {
-		System.out.println("HERE");
-		System.out.println(selfHand);
+
+
 		// update game state
 		initializeTurn(boardState, partnerHand);
+//		System.out.println("\n");
+//		System.out.println(Arrays.toString(selfPlayable));
+//		System.out.println(Arrays.toString(selfPlayable));
+//		System.out.println("SELF KNOWLEDGE BASE");
+//		System.out.println(selfHand);
+//		System.out.println("OTHER KNOWLEDGE BASE");
+//		System.out.println(otherHandKB);
+//		System.out.println("\n");
+
 
 		// if play can be made, do so
 		String playAction = canPlay();
@@ -228,7 +238,7 @@ public class Player {
 
 		// if hint can be made, do so
 		String hintAction = canHint();
-		if (!canHint().equals("CANNOT_HINT")) {
+		if (!hintAction.equals("CANNOT_HINT")) {
 			return hintAction;
 		}
 
@@ -258,15 +268,43 @@ public class Player {
 		String[] hints = hintManager.findHints(discardManager, knownBoard, otherHand, otherPlayable, otherHandKB, constantBoard);
 		discardHint = hints[0];
 		playHint = hints[1];
+
+		// neither hint available
 		if (discardHint == null && playHint == null) {
 			String toReturn = hintManager.randomHint(otherHand,otherPlayable,prevRandHint, discardManager);
 			prevRandHint = toReturn;
 			return toReturn;
 		}
+		// discard hint available
 		if (playHint == null) {
+			setOtherKnowledgeBase(discardHint.split(" "));
 			return discardHint;
 		}
+
+		// play hint available
+		setOtherKnowledgeBase(playHint.split(" "));
+
 		return playHint;
+	}
+
+	private void setOtherKnowledgeBase(String[] hintStrings) throws Exception {
+		for (int i = 0; i < otherHand.size(); i++) {
+			Card card = otherHand.get(i);
+			Card oldCard = otherHandKB.get(i);
+			if (hintStrings[0].equals("NUMBERHINT")) {
+				if (card.value == Integer.parseInt(hintStrings[1])) {
+					otherHandKB.remove(i);
+					otherHandKB.add(i,new Card(oldCard.color,card.value));
+				}
+			}
+
+			if (hintStrings[0].equals("COLORHINT")) {
+				if (card.value == Integer.parseInt(hintStrings[1])) {
+					otherHandKB.remove(i);
+					otherHandKB.add(i,new Card(card.color,oldCard.value));
+				}
+			}
+		}
 	}
 
 
@@ -319,13 +357,15 @@ public class Player {
 		for (int i = 0; i < selfHand.size(); i++) {
 			Card card = selfHand.get(i);
 			if (card.value != -1 && card.color != -1) {
-				selfPlayable[i] = selfPlayable[i] || knownBoard.isLegalPlay(card);
+				selfPlayable[i] = knownBoard.isLegalPlay(card);
 			}
 		}
 	}
 
-	public String discardRandom() {
+	public String discardRandom() throws Exception {
 		//TODO: make logic better for discarding random card
+		selfHand.remove(0);
+		selfHand.add(0, new Card(-1,-1));
 		return discardManager.discard(0);
 	}
 

@@ -9,7 +9,7 @@ public class Driver {
 //		for (int i = 0; i < 100; i++) {
 //			Hanabi next = new Hanabi(false);
 //			int score = next.play();
-//			if (score == 0) {
+//			if (score < 10) {
 //				System.out.println(next.seed);
 //			}
 //			System.out.println("Game " + i + " score: " + score);

@@ -146,10 +146,16 @@ public class HintManager {
             hints[0] = "COLORHINT " + otherHand.get(maxColorDiscardIdx).color;
         }
 
+//        System.out.println("OTHER HAND KB");
+//        System.out.println(otherHandKB);
         if (numPlayIdx != -1) {
-            hints[1] = "NUMBERHINT " + otherHand.get(numPlayIdx).value;
+            if (otherHandKB.get(numPlayIdx).value == -1) {
+                hints[1] = "NUMBERHINT " + otherHand.get(numPlayIdx).value;
+            }
         } else if (colorPlayIdx != -1) {
-            hints[1] = "COLORHINT " + otherHand.get(colorPlayIdx).color;
+            if (otherHandKB.get(colorPlayIdx).color == -1) {
+                hints[1] = "COLORHINT " + otherHand.get(colorPlayIdx).color;
+            }
         }
         return hints;
         // TODO: currently prioritizes number hints and has no preference for other knowledge-base hints (2) vs. single card hints (1),
