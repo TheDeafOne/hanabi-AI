@@ -353,7 +353,7 @@ public class Player {
 	public void loadOtherDiscardableCards() throws Exception {
 		// manage playable and discardable cards for partner hand
 		for (int i = 0; i < otherHand.size(); i++) {
-			otherDiscardable[i] = discardManager.isSelfDiscardable(otherHand.get(i),knownBoard); // sets all values in otherDiscardable to true or false
+			otherDiscardable[i] = discardManager.isOtherDiscardable(i,otherHand,knownBoard,otherHandKB); // sets all values in otherDiscardable to true or false
 		}
 	}
 
