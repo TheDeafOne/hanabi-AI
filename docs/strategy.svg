@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="490" viewBox="0 0 1200 490" role="img" aria-labelledby="title desc">
+  <title id="title">Hanabi AI decision order</title>
+  <desc id="desc">The agent uses the public board, card knowledge, visible partner hand, and hints. It first tries playing, then a known discard, then a useful hint, then discarding the card with the highest tracked age. Decision flow for the agent strategy.</desc>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7b8290"/></marker></defs>
+  <rect width="1200" height="490" rx="20" fill="#f7f5ef"/>
+  <g font-family="Arial, sans-serif">
+    <text x="40" y="48" font-size="17" font-weight="700" fill="#5b557d">HANABI AI</text>
+    <text x="40" y="90" font-size="31" font-weight="700" fill="#242a37">What should we do with this turn?</text>
+    <text x="40" y="126" font-size="17" fill="#5f6572">Public board · partial card knowledge · visible partner hand · previous hints</text>
+    <g fill="#fff" stroke="#dcdde1" stroke-width="1.5">
+      <rect x="40" y="186" width="245" height="199" rx="12"/>
+      <rect x="332" y="186" width="245" height="199" rx="12"/>
+      <rect x="624" y="186" width="245" height="199" rx="12"/>
+      <rect x="916" y="186" width="245" height="199" rx="12"/>
+    </g>
+    <g font-size="15" font-weight="700" fill="#fff" text-anchor="middle">
+      <circle cx="74" cy="222" r="17" fill="#3b8066"/><text x="74" y="227">1</text>
+      <circle cx="366" cy="222" r="17" fill="#b47636"/><text x="366" y="227">2</text>
+      <circle cx="658" cy="222" r="17" fill="#5c70ab"/><text x="658" y="227">3</text>
+      <circle cx="950" cy="222" r="17" fill="#8b627f"/><text x="950" y="227">4</text>
+    </g>
+    <g font-size="22" font-weight="700" fill="#242a37">
+      <text x="60" y="273">Play</text><text x="352" y="273">Discard</text>
+      <text x="644" y="273">Hint</text><text x="936" y="273">Make space</text>
+    </g>
+    <g font-size="17" fill="#5f6572">
+      <text x="60" y="310"><tspan x="60">A card marked</tspan><tspan x="60" dy="25">as playable</tspan></text>
+      <text x="352" y="310"><tspan x="352">A card known</tspan><tspan x="352" dy="25">to be unneeded</tspan></text>
+      <text x="644" y="310"><tspan x="644">Help the partner</tspan><tspan x="644" dy="25">play or discard</tspan></text>
+      <text x="936" y="310"><tspan x="936">Discard the</tspan><tspan x="936" dy="25">highest-age card</tspan></text>
+    </g>
+    <g stroke="#7b8290" stroke-width="2" marker-end="url(#arrow)"><path d="M290 286 H324"/><path d="M582 286 H616"/><path d="M874 286 H908"/></g>
+    <g font-size="12" fill="#707684" text-anchor="middle"><text x="307" y="267">else</text><text x="599" y="267">else</text><text x="891" y="267">else</text></g>
+    <text x="40" y="431" font-size="16" fill="#5f6572">The hint phase can fall back to a broader hint or random discard. Single-card hints act as play cues.</text>
+    <text x="40" y="461" font-size="14" fill="#707684">Decision order in Player.ask and its hint and discard helpers.</text>
+  </g>
+</svg>
