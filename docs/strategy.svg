@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="490" viewBox="0 0 1200 490" role="img" aria-labelledby="title desc">
   <title id="title">Hanabi AI decision order</title>
-  <desc id="desc">The agent uses the public board, card knowledge, visible partner hand, and hints. It first tries playing, then a known discard, then a useful hint, then discarding the card with the highest tracked age. Illustration of source logic, not a game screenshot.</desc>
+  <desc id="desc">The agent uses the public board, card knowledge, visible partner hand, and hints. It first tries playing, then a known discard, then a useful hint, then discarding the card with the highest tracked age. Decision flow for the agent strategy.</desc>
   <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7b8290"/></marker></defs>
   <rect width="1200" height="490" rx="20" fill="#f7f5ef"/>
   <g font-family="Arial, sans-serif">
@@ -32,6 +32,6 @@
     <g stroke="#7b8290" stroke-width="2" marker-end="url(#arrow)"><path d="M290 286 H324"/><path d="M582 286 H616"/><path d="M874 286 H908"/></g>
     <g font-size="12" fill="#707684" text-anchor="middle"><text x="307" y="267">else</text><text x="599" y="267">else</text><text x="891" y="267">else</text></g>
     <text x="40" y="431" font-size="16" fill="#5f6572">The hint phase can fall back to a broader hint or random discard. Single-card hints act as play cues.</text>
-    <text x="40" y="461" font-size="14" fill="#707684">Strategy illustration from Player.ask and its helpers; not a game screenshot or performance result.</text>
+    <text x="40" y="461" font-size="14" fill="#707684">Decision order in Player.ask and its hint and discard helpers.</text>
   </g>
 </svg>

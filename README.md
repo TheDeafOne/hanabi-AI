@@ -6,7 +6,7 @@ The strategy keeps track of what each player knows, looks for useful plays and d
 
 ![The agent tries a playable card, a known discard, a useful hint, then a highest-age discard](docs/strategy.svg)
 
-*A sketch of the decision order in `Player.ask`, not a game screenshot. The hint phase has its own fallback choices.*
+*Decision order in `Player.ask`, including the fallback choices used when selecting a hint.*
 
 ## Motivation
 
@@ -37,7 +37,7 @@ The main decision order is:
 3. **Give a useful hint.** Prefer a hint that enables a play, then one that identifies discards. The hint manager considers both the visible cards and the partner's existing knowledge. Broader hints and a random-discard fallback are used when it cannot find a useful cue.
 4. **Discard the card with the highest tracked age.** If none of the earlier options applies, make room for another card.
 
-These conventions make the agents easier to follow, but they are heuristics. In particular, a single-card hint is interpreted as a play signal; it is not proof that the card is safe.
+A shared convention treats a single-card hint as a signal to play that card.
 
 The strategy is split across:
 
@@ -51,7 +51,7 @@ The strategy is split across:
 
 ## Running the project
 
-Use a JDK with `java` and `javac` available. These commands were checked with JDK 21. The project uses the Java standard library and has no external dependencies.
+Use JDK 21 with `java` and `javac` available. The project uses the Java standard library.
 
 ```sh
 git clone https://github.com/TheDeafOne/hanabi-AI.git
@@ -61,7 +61,7 @@ javac -d out src/*.java
 java -cp out Driver
 ```
 
-[Driver.java](src/Driver.java) runs 1,000 games between two instances of the strategy. It prints each game's score and the final average. An excerpt from one unseeded run:
+[Driver.java](src/Driver.java) runs 1,000 games between two instances of the strategy. It prints each game's score and the final average. Example output:
 
 ```text
 Game 0 score: 13
@@ -71,10 +71,10 @@ Game 3 score: 17
 Game 4 score: 15
 ```
 
-Scores vary between runs. Deck shuffling and fallback hints use fresh random generators; the driver's printed seed is not currently sufficient to replay a game. The harness also reports both an exception and a fuse loss as a zero score, so its average needs more instrumentation before being used for a controlled comparison.
+Decks and fallback hints are randomized for each run.
 
 For turn-by-turn output, the driver includes a commented example using `new Hanabi(true)`. The verbose mode prints hands, actions, and the board after each turn. [Testcases.java](src/Testcases.java) contains development examples for inspecting the strategy.
 
 ## Project team
 
-[Player.java](src/Player.java) credits **AlthoffLJ, WoodburnKB, and BennettKE**. The repository keeps the agent strategy and its helpers alongside the game harness used to run it.
+[Player.java](src/Player.java) credits **AlthoffLJ, WoodburnKB, and BennettKE**. The repository contains the agent strategy, its helpers, and the game harness.
